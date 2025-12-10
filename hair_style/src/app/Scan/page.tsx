@@ -3,7 +3,6 @@ import React from "react";
 import Lottie from "lottie-react";
 import animation from "../../../animation/scan line.json";
 import Image from "next/image";
-import { Heading_2 } from "@/components/Text_Style/Heading_2";
 import { useImageContext } from "@/context/ImageContext";
 import { SmallText } from "@/components/Text_Style/Small_text";
 

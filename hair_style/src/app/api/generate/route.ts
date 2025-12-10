@@ -122,10 +122,13 @@ Blend the hair naturally with the existing head shape.
     // Return array of 3 hairstyle objects
     return NextResponse.json({ results: finalOutput });
 
-  } catch (error) {
-    console.error("Gemini API Error:", error);
+  } catch (error: any) {
+    console.error("Gemini API Error Details:", error);
+    if (error.response) {
+      console.error("Error Response:", error.response);
+    }
     return NextResponse.json(
-      { error: "Failed to generate 3 hairstyles" },
+      { error: error.message || "Failed to generate 3 hairstyles" },
       { status: 500 }
     );
   }

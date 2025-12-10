@@ -21,11 +21,8 @@ const Option = () => {
   const [hairStyle, setHairStyle] = useState<Array<"asian" | "western">>([]);
   const [color, setColor] = useState("#aabbcc");
   const [open, setOpen] = useState(false);
-  const [image, setImage] = useState<string[] | null>(null);
-  const [image1, setImage1] = useState<string | null>(null);
-
   const pickerRef = useRef<HTMLDivElement>(null);
-  const [result, setResult] = useState<string | null>(null);
+
 
 
   const router = useRouter()
@@ -64,11 +61,7 @@ const Option = () => {
   }, []);
 
   // debug/use generated images when available
-  useEffect(() => {
-    if (image && image.length) {
-      console.log("Generated images:", image);
-    }
-  }, [image]);
+
 
 
   // for image uploader
@@ -243,11 +236,12 @@ const Option = () => {
         // 3. Navigate to result page
         router.push("/result");
       } else {
-        alert("Failed to generate images.");
+        console.error("API Error:", data);
+        alert(data.error || "Failed to generate images. Please try again.");
       }
-    } catch (e) {
-      console.error(e);
-      alert("Error generating images.");
+    } catch (e: any) {
+      console.error("Fetch Error:", e);
+      alert(`Error generating images: ${e.message}`);
     } finally {
       // setLoading(false);
     }
@@ -309,7 +303,6 @@ const Option = () => {
               onClick={() => {
                 setPreview(null);
                 setFile(null);
-                setResult(null)
               }}
               className="absolute top-2 right-2  text-white bg-black/50 px-1 h-5 w-5 rounded-full  transition flex items-center justify-center"
             >
@@ -386,17 +379,16 @@ const Option = () => {
             disabled={!file}
           />
 
-          {image && result && (
-            <Image src={result} alt="image" height={200} width={200} />
-          )}
+
         </div>
 
 
       )}
-
-
     </div>
   );
 };
+
+
+
 
 export default Option;

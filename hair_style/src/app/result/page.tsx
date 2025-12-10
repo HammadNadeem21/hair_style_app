@@ -3,14 +3,14 @@
 import React from 'react'
 import ResultCard from '@/components/ResultCard'
 import { Heading_2 } from '@/components/Text_Style/Heading_2'
-import { Sparkles, X } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import { useImageContext, HairstyleResult } from '@/context/ImageContext'
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
-
+  DialogTitle,
 } from "@/components/ui/dialog"
 import Image from 'next/image';
 
@@ -82,7 +82,7 @@ const Page = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 <div className="absolute bottom-4 left-4 right-4 text-white">
-                  <h2 className="text-2xl font-bold leading-tight">{selectedHairstyle.hairstyle_name}</h2>
+                  <DialogTitle className="text-2xl font-bold leading-tight">{selectedHairstyle.hairstyle_name}</DialogTitle>
                 </div>
               </div>
 

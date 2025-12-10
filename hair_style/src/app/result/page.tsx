@@ -10,12 +10,9 @@ import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
+
 } from "@/components/ui/dialog"
 import Image from 'next/image';
-import { SmallText } from '@/components/Text_Style/Small_text';
 
 const Page = () => {
   const { resultImage, resultImages } = useImageContext();

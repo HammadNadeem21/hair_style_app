@@ -9,7 +9,7 @@ import { FaGoogle } from "react-icons/fa";
 import Link from 'next/link'
 
 
-const page = () => {
+const SignInPage = () => {
   return (
     <div className='max-w-[440px] max-h-[880px] bg-white flex flex-col gap-4 items-center py-8 mt-10 px-5'>
       <Logo />
@@ -54,4 +54,4 @@ const page = () => {
   )
 }
 
-export default page
+export default SignInPage

@@ -30,7 +30,7 @@ export function Avatar({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent className="w-40 bg-primaryColor">
-        <DropdownMenuItem onClick={onLogout} className="cursor-pointer text-white">
+        <DropdownMenuItem onClick={onLogout} className="cursor-pointer text-white focus:bg-primaryColor focus:text-white">
           <LogOut className="mr-2 h-4 w-4" />
           Logout
         </DropdownMenuItem>

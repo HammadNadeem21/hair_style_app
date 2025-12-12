@@ -20,6 +20,7 @@ const geistMono = localFont({
 
 
 import { ImageProvider } from "@/context/ImageContext";
+import { AuthProvider } from "@/components/AuthProvider";
 
 export default function RootLayout({
   children,
@@ -37,9 +38,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased `}
       >
         <ImageProvider>
-          {!hideNav && <Nav />}
-          {children}
-          {/* <Footer/> */}
+          <AuthProvider>
+            {!hideNav && <Nav />}
+            {children}
+            {/* <Footer/> */}
+          </AuthProvider>
         </ImageProvider>
       </body>
     </html>

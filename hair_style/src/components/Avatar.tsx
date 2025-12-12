@@ -24,13 +24,13 @@ export function Avatar({
     <DropdownMenu>
       <DropdownMenuTrigger>
         <UiAvatar className="cursor-pointer">
-          <AvatarImage src={image} alt={name} />
-          <AvatarFallback>{name.charAt(0)}</AvatarFallback>
+          <AvatarImage src={image} alt={name} referrerPolicy="no-referrer" />
+          <AvatarFallback className="text-primaryColor bg-primaryColor/30">{name.charAt(0)}</AvatarFallback>
         </UiAvatar>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent className="w-40">
-        <DropdownMenuItem onClick={onLogout} className="cursor-pointer">
+      <DropdownMenuContent className="w-40 bg-primaryColor">
+        <DropdownMenuItem onClick={onLogout} className="cursor-pointer text-white">
           <LogOut className="mr-2 h-4 w-4" />
           Logout
         </DropdownMenuItem>

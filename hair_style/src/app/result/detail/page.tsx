@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useImageContext, HairstyleResult } from "@/context/ImageContext";
 import Image from "next/image";
 import { Heading_2 } from "@/components/Text_Style/Heading_2";
 import { ArrowLeft } from "lucide-react";
 
-const DetailPage = () => {
+const DetailContent = () => {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { resultImages, resultImage } = useImageContext();
@@ -103,6 +103,14 @@ const DetailPage = () => {
 
 
         </div>
+    );
+};
+
+const DetailPage = () => {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-500">Loading...</div>}>
+            <DetailContent />
+        </Suspense>
     );
 };
 

@@ -4,14 +4,10 @@ import React from 'react'
 import ResultCard from '@/components/ResultCard'
 import { Heading_2 } from '@/components/Text_Style/Heading_2'
 import { Sparkles } from 'lucide-react'
-import { useImageContext, HairstyleResult } from '@/context/ImageContext'
+import { useImageContext, } from '@/context/ImageContext'
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog"
+
 import Image from 'next/image';
 
 const Page = () => {

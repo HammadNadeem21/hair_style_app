@@ -9,6 +9,26 @@ import { SmallText } from "@/components/Text_Style/Small_text";
 const Page = () => {
   const { scanImage } = useImageContext();
 
+  const [loadingText, setLoadingText] = React.useState("Scanning your hairstyle...");
+
+  React.useEffect(() => {
+    const texts = [
+      "Scanning your hairstyle...",
+      "Analyzing face shape...",
+      "Detecting features...",
+      "Generating new look...",
+      "Almost there..."
+    ];
+    let index = 0;
+
+    const interval = setInterval(() => {
+      index = (index + 1) % texts.length;
+      setLoadingText(texts[index]);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-primaryColor/10 via-white to-white relative overflow-hidden">
 
@@ -51,7 +71,7 @@ const Page = () => {
 
         </div>
       </div>
-      <SmallText value="Scanning your hairstyle..." textColor="text-primaryColor" className="font-bold text-xl mt-5" />
+      <SmallText value={loadingText} textColor="text-primaryColor" className="font-bold text-xl mt-5 animate-pulse transition-all duration-500" />
 
     </div>
 

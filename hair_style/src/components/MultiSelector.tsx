@@ -68,7 +68,7 @@ export function MultiSelect<T extends string>({
   selected,
   onChange,
 }: MultiSelectProps<T>) {
-  
+
   const toggleValue = (value: T) => {
     if (selected.includes(value)) {
       onChange(selected.filter((item) => item !== value));
@@ -79,17 +79,16 @@ export function MultiSelect<T extends string>({
 
   return (
     <div className="flex items-center justify-center gap-2">
-      {label && <label className="font-medium text-grayColor">{label}</label>}
+      {label && <label className="font-medium text-primaryColor shadow-xl py-2 px-4 border border-primaryColor rounded-xl">{label}</label>}
 
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-1 flex-wrap bg-gray-100/50 p-1 rounded-xl">
         {options.map((opt) => (
           <button
             key={opt}
-            className={`py-1 px-3 rounded-lg text-sm  ${
-              selected.includes(opt)
-                ? "bg-primaryColor text-white"
-                : "bg-white border border-grayColor text-grayColor"
-            }`}
+            className={`py-2 px-4 rounded-lg text-sm font-medium transition-all duration-300 ${selected.includes(opt)
+              ? "bg-primaryColor text-white shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
+              }`}
             onClick={() => toggleValue(opt)}
           >
             {opt.charAt(0).toUpperCase() + opt.slice(1)}

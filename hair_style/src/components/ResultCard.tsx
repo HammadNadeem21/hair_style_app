@@ -6,17 +6,20 @@ interface ResultCardProps {
   image?: string;
   title?: string;
   description?: string;
-  onClick?: () => void;
+  onImageClick?: () => void;
+  onDetailClick?: () => void;
 }
 
-const ResultCard = ({ image, title, description, onClick }: ResultCardProps) => {
+const ResultCard = ({ image, title, description, onImageClick, onDetailClick }: ResultCardProps) => {
   return (
     <div
-      onClick={onClick}
-      className='group relative flex flex-col items-center justify-start gap-3 rounded-2xl p-3 bg-white/40 backdrop-blur-md border border-white/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden cursor-pointer'
+      className='group relative flex flex-col items-center justify-start gap-3 rounded-2xl p-3 bg-white/40 backdrop-blur-md border border-white/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden'
     >
 
-      <div className="relative h-[200px] w-full rounded-xl overflow-hidden shadow-sm">
+      <div
+        className="relative h-[200px] w-full rounded-xl overflow-hidden shadow-sm cursor-zoom-in"
+        onClick={onImageClick}
+      >
         <Image
           src={image || "/selfie3.jpeg"}
           alt={title || 'Hairstyle'}
@@ -35,6 +38,13 @@ const ResultCard = ({ image, title, description, onClick }: ResultCardProps) => 
           </p>
         )}
       </div>
+
+      <button
+        onClick={onDetailClick}
+        className="w-full py-2 bg-white text-primaryColor border border-primaryColor/20 rounded-xl font-medium text-sm shadow-sm hover:bg-primaryColor hover:text-white transition-all duration-300"
+      >
+        View Details
+      </button>
 
     </div>
   )

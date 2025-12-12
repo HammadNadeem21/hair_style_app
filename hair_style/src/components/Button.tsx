@@ -21,7 +21,7 @@
 //     ${variant === 'default' ? 'text-white' : ''}
 //     ${variant === 'default' ? 'hover:bg-primaryColor' : ''}
 //     ${variant === 'default' ? 'hover:shadow-xl' : ''}  
-    
+
 //     `}
 //   >{value}</Button>
 // }
@@ -37,18 +37,21 @@ import { ComponentProps } from "react";
 // Combine all ShadButton props + value
 type MyButtonProps = ComponentProps<typeof ShadButton> & {
   value?: string;
+  loading?: boolean;
 };
 
-export function MyButton({ value, children, className, ...props }: MyButtonProps) {
+export function MyButton({ value, children, className, loading, ...props }: MyButtonProps) {
   return (
     <ShadButton
       {...props}
+      disabled={loading || props.disabled}
       className={cn(
-        "w-full flex items-center justify-center",
+        "w-full flex items-center justify-center gap-2",
         props.variant === "default" && "bg-primaryColor text-white hover:bg-primaryColor hover:shadow-xl",
         className
       )}
     >
+      {loading && <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />}
       {value ?? children}
     </ShadButton>
   );

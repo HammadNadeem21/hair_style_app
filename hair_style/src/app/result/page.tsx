@@ -16,14 +16,16 @@ import Image from 'next/image';
 
 const Page = () => {
   const { resultImage, resultImages } = useImageContext();
-  const [selectedHairstyle, setSelectedHairstyle] = useState<HairstyleResult | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
   const router = useRouter();
 
-  const handleCardClick = (hairstyle: HairstyleResult) => {
-    setSelectedHairstyle(hairstyle);
-    setIsOpen(true);
+  const handleImageClick = (image: string) => {
+    setLightboxImage(image);
+  };
+
+  const handleDetailClick = (index: number) => {
+    router.push(`/result/detail?index=${index}`);
   };
 
   return (
@@ -48,11 +50,18 @@ const Page = () => {
                 image={item.image || undefined}
                 title={item.hairstyle_name}
                 description={item.description}
-                onClick={() => handleCardClick(item)}
+                onImageClick={() => handleImageClick(item.image || "/selfie3.jpeg")}
+                onDetailClick={() => handleDetailClick(index)}
               />
             ))
           ) : (
-            resultImage && <ResultCard image={resultImage} />
+            resultImage && (
+              <ResultCard
+                image={resultImage}
+                onImageClick={() => handleImageClick(resultImage)}
+                onDetailClick={() => handleDetailClick(0)}
+              />
+            )
           )}
         </div>
 
@@ -65,64 +74,31 @@ const Page = () => {
 
       </div>
 
-      {/* Detail Dialog */}
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-md w-[90%] rounded-3xl bg-white/90 backdrop-blur-xl border-white/50 p-0 overflow-hidden">
-
-          {selectedHairstyle && (
-            <div className="flex flex-col h-[80vh] max-h-[600px]">
-
-              {/* Image Header */}
-              <div className="relative w-full h-[40%] min-h-[250px]">
-                <Image
-                  src={selectedHairstyle.image || "/selfie3.jpeg"}
-                  alt={selectedHairstyle.hairstyle_name}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4 text-white">
-                  <DialogTitle className="text-2xl font-bold leading-tight">{selectedHairstyle.hairstyle_name}</DialogTitle>
-                </div>
-              </div>
-
-              {/* Content Scrollable Area */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
-
-                {/* Description */}
-                <div className="space-y-2">
-                  <h3 className="text-sm font-semibold text-primaryColor uppercase tracking-wider">Description</h3>
-                  <p className="text-gray-600 leading-relaxed text-sm">
-                    {selectedHairstyle.description}
-                  </p>
-                </div>
-
-                {/* How to Apply */}
-                {selectedHairstyle.how_to_apply && (
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-semibold text-primaryColor uppercase tracking-wider">How to Style</h3>
-                    <p className="text-gray-600 leading-relaxed text-sm whitespace-pre-line">
-                      {selectedHairstyle.how_to_apply}
-                    </p>
-                  </div>
-                )}
-
-              </div>
-
-              {/* Footer Action */}
-              <div className="p-4 bg-gray-50 border-t border-gray-100">
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="w-full py-3 bg-primaryColor text-white rounded-xl font-medium shadow-md active:scale-95 transition-transform"
-                >
-                  Close
-                </button>
-              </div>
-
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Lightbox */}
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm animate-fadeIn"
+          onClick={() => setLightboxImage(null)}
+        >
+          <div className="relative w-[90%] h-[80%] p-4">
+            <Image
+              src={lightboxImage}
+              alt="Full screen preview"
+              fill
+              className="object-contain"
+            />
+            <button
+              onClick={() => setLightboxImage(null)}
+              className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   )

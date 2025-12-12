@@ -2,6 +2,7 @@
 "use client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { MdOutlineFileUpload } from "react-icons/md";
+import { X } from "lucide-react";
 import { Heading_2 } from "./Text_Style/Heading_2";
 import { SmallText } from "./Text_Style/Small_text";
 import { IoCameraOutline } from "react-icons/io5";
@@ -22,31 +23,14 @@ const Option = () => {
   const [color, setColor] = useState("#aabbcc");
   const [open, setOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(false);
 
 
 
   const router = useRouter()
   const { setScanImage, setResultImages } = useImageContext();
 
-
-  // Close when clicking outside
-  // useEffect(() => {
-  //   const handleClick = (e: MouseEvent) => {
-  //     if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
-  //       setOpen(false);
-  //     }
-  //   };
-
-  //   if (open) {
-  //     document.addEventListener("mousedown", handleClick);
-  //   } else {
-  //     document.removeEventListener("mousedown", handleClick);
-  //   }
-
-  //   return () => {
-  //     document.removeEventListener("mousedown", handleClick);
-  //   };
-  // }, [open]);
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
@@ -60,7 +44,7 @@ const Option = () => {
     };
   }, []);
 
-  // debug/use generated images when available
+
 
 
 
@@ -202,6 +186,8 @@ const Option = () => {
       return alert("Please select some style options first!");
     }
 
+    setLoading(true);
+
     // Save image to Context for Scan page
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -243,7 +229,7 @@ const Option = () => {
       console.error("Fetch Error:", e);
       alert(`Error generating images: ${e.message}`);
     } finally {
-      // setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -251,73 +237,87 @@ const Option = () => {
 
   return (
     <div className="w-full">
-      <div className="   flex flex-col items-center justify-center ">
-        <div className="grid grid-cols-2 py-1 mt-5">
-          <div
-            className="flex flex-col items-center justify-start gap-2 "
-            {...getRootProps()}
-          >
-            <input {...getInputProps()} className="hidden" />
+      {!preview ? (
+        <div className="flex flex-col items-center justify-center w-full animate-fadeIn">
+          <div className="grid grid-cols-2 gap-4 w-full mt-2">
+            <div
+              className="flex flex-col items-center justify-center gap-3 bg-white/40 backdrop-blur-md border border-white/50 shadow-sm hover:shadow-lg rounded-2xl p-6 transition-all duration-300 cursor-pointer hover:-translate-y-1 group"
+              {...getRootProps()}
+            >
+              <input {...getInputProps()} className="hidden" />
 
-            <div className="flex items-center justify-center py-3 px-3 rounded-lg bg-primaryColor/20 text-primaryColor">
-              <MdOutlineFileUpload size={40} />
+              <div className="flex items-center justify-center p-4 rounded-xl bg-primaryColor/10 text-primaryColor   transition-colors duration-300">
+                <MdOutlineFileUpload size={32} />
+              </div>
+              <div className="text-center">
+                <Heading_2 value="Upload Photo" className="font-semibold text-lg text-grayColor" />
+                <SmallText
+                  value="From Gallery"
+                  textColor="text-gray-500"
+                  className="text-center text-xs mt-1"
+                />
+              </div>
             </div>
-            <Heading_2 value="Upload Photo" className="font-normal" />
-            <SmallText
-              value="Use existing photos from your gallery."
-              textColor="text-grayColor"
-              className="text-center text-xs"
-            />
-          </div>
 
-          <div className="flex flex-col items-center justify-start gap-2 ">
-            <input type="file" accept="image/*"
-              capture="user"
-              className="hidden" onChange={handleCamera} />
-            <div className="flex items-center justify-center py-3 px-3 rounded-lg bg-primaryColor/20 text-primaryColor">
-              <IoCameraOutline size={40} />
+            <div
+              className="flex flex-col items-center justify-center gap-3 bg-white/40 backdrop-blur-md border border-white/50 shadow-sm hover:shadow-lg rounded-2xl p-6 transition-all duration-300 cursor-pointer hover:-translate-y-1 group"
+              onClick={() => cameraInputRef.current?.click()}
+            >
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="user"
+                className="hidden"
+                onChange={handleCamera}
+              />
+              <div className="flex items-center justify-center p-4 rounded-xl bg-primaryColor/10 text-primaryColor  transition-colors duration-300">
+                <IoCameraOutline size={32} />
+              </div>
+              <div className="text-center">
+                <Heading_2 value="Take Selfie" className="font-semibold text-lg text-grayColor" />
+                <SmallText
+                  value="Camera"
+                  textColor="text-gray-500"
+                  className="text-center text-xs mt-1"
+                />
+              </div>
             </div>
-            <Heading_2 value="Take Selfie" className="font-normal" />
-            <SmallText
-              value="Capture a new photo instantly."
-              textColor="text-grayColor"
-              className="text-center text-xs"
-            />
           </div>
         </div>
+      ) : (
+        <div className="flex flex-col items-center justify-start gap-6 w-full animate-fadeIn">
 
-        {/* <SmallText value='Privacy Policy Terms of Service' textColor='text-primaryColor' className='absolute bottom-0'/> */}
-      </div>
-
-      {preview && (
-        <div className="flex flex-col items-start justify-start gap-2 mt-7">
-          <div className="h-[200px] w-[200px] bg-blue-300 relative">
+          {/* Image Preview */}
+          <div className="relative w-full max-w-[280px] aspect-[3/4] rounded-2xl overflow-hidden shadow-lg border border-white/50">
             <Image
               src={preview}
               alt="preview"
-              height={500}
-              width={500}
-              className="h-full w-full"
+              fill
+              className="object-cover"
             />
             <button
               onClick={() => {
                 setPreview(null);
                 setFile(null);
               }}
-              className="absolute top-2 right-2  text-white bg-black/50 px-1 h-5 w-5 rounded-full  transition flex items-center justify-center"
+              className="absolute top-3 right-3 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full backdrop-blur-sm transition-all duration-200 z-10"
             >
-              ✕
+              <X size={16} />
             </button>
+
+            {/* Overlay Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
           </div>
 
-          <div className="flex flex-col items-center justify-center gap-3 mt-1 mb-1">
+          {/* Controls */}
+          <div className="flex flex-col items-center justify-center gap-4 w-full">
 
-            <div className='flex items-center justify-start gap-2 w-full '>
-              <label className='block font-medium text-grayColor'>Hair Length: </label>
-
-              <div className='flex items-center justify-start gap-1'>
+            <div className='flex flex-col items-center gap-2 w-full'>
+              <label className='text-sm font-medium text-primaryColor uppercase tracking-wider shadow-xl py-2 px-4 border border-primaryColor rounded-xl'>Hair Length</label>
+              <div className='flex items-center justify-center gap-2 bg-gray-100/50 p-1.5 rounded-xl w-full max-w-[280px]'>
                 <button
-                  className={`py-1 px-3 rounded-lg text-sm ${hairLength === "long" ? 'bg-primaryColor text-white' : 'bg-white text-grayColor border border-grayColor'
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${hairLength === "long" ? 'bg-primaryColor text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
                     }`}
                   onClick={() => setHairLength("long")}
                 >
@@ -325,7 +325,7 @@ const Option = () => {
                 </button>
 
                 <button
-                  className={`py-1 px-3 rounded-lg text-sm ${hairLength === "short" ? 'bg-primaryColor text-white' : 'bg-white text-grayColor border border-grayColor'
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${hairLength === "short" ? 'bg-primaryColor text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
                     }`}
                   onClick={() => setHairLength("short")}
                 >
@@ -335,54 +335,53 @@ const Option = () => {
             </div>
 
             <MultiSelect
-              label="Hair Styles:"
+              label="Hair Styles"
               options={["asian", "western"]}
               selected={hairStyle}
               onChange={setHairStyle}
             />
 
-            <div className="relative flex items-center justify-start w-full">
-
-              {/* BUTTON */}
-              <div className="flex items-center gap-2">
+            <div className="relative flex items-center justify-center w-full z-20">
+              <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
                 <button
                   onClick={() => setOpen(prev => !prev)}
-                  className="px-4 py-2 rounded-lg bg-primaryColor text-white font-medium"
+                  className="text-sm font-medium py-3 px-3 rounded-lg transition-colors bg-primaryColor text-white"
                 >
-                  Pick Color
+                  Hair Color
                 </button>
-                <div
-                  className="w-8 h-8 rounded-full border border-gray-300 shadow-sm"
-                  style={{ backgroundColor: color }}
-                  title="Selected Color"
-                />
+                <div className="h-4 w-[1px] bg-gray-300" />
+                <button
+                  onClick={() => setOpen(prev => !prev)}
+                  className="flex items-center gap-2"
+                >
+                  <div
+                    className="w-6 h-6 rounded-full border border-gray-200 shadow-sm ring-2 ring-white"
+                    style={{ backgroundColor: color }}
+                  />
+                </button>
               </div>
 
-              {/* DROPDOWN PICKER */}
               {open && (
                 <div
                   ref={pickerRef}
-                  className="absolute left-[120px] top-[-160px] bottom-0 mt-2  transition-all duration-300 animate-fadeIn z-50"
+                  className="absolute bottom-full mb-3 transition-all duration-300 animate-fadeIn bg-white p-3 rounded-2xl shadow-xl border border-gray-100"
                 >
                   <ColorPicker color={color} onChange={setColor} />
-
-                  {/* <div className="mt-3 w-full h-8 rounded-md border" style={{ background: color }}></div> */}
                 </div>
               )}
             </div>
           </div>
 
           <MyButton
-            value="Change Hair Style"
+            value={loading ? "Generating..." : "Generate Hairstyle"}
             variant="default"
             onClick={() => file && handleUpload()}
-            disabled={!file}
+            disabled={!file || loading}
+            loading={loading}
+            className="w-full max-w-[280px] py-4 text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
           />
 
-
         </div>
-
-
       )}
     </div>
   );

@@ -23,10 +23,10 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ credits: user.credits });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Error fetching credits:", error);
         return NextResponse.json(
-            { error: error.message || "Failed to fetch credits" },
+            { error: error instanceof Error ? error.message : "Failed to fetch credits" },
             { status: 500 }
         );
     }

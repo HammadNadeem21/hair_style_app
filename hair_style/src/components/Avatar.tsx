@@ -4,10 +4,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-  DropdownMenuLabel,
+
 } from "@/components/ui/dropdown-menu";
 import { Avatar as UiAvatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User as UserIcon, Coins } from "lucide-react";
+import { LogOut, Coins } from "lucide-react";
 
 interface AvatarMenuProps {
   image?: string;

@@ -4,6 +4,23 @@ import { NextResponse } from "next/server";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
+async function generateWithRetry(model: any, prompt: any, retries = 3, delay = 1000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await model.generateContent(prompt);
+    } catch (error: any) {
+      // Check for 503 Service Unavailable or 429 Too Many Requests
+      if ((error.response?.status === 503 || error.status === 503 || error.message?.includes('503') || error.message?.includes('overloaded')) && i < retries - 1) {
+        console.warn(`Attempt ${i + 1} failed with 503/Overloaded. Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2; // Exponential backoff
+        continue;
+      }
+      throw error;
+    }
+  }
+}
+
 export async function POST(request: Request) {
   try {
     // Parse form data
@@ -41,7 +58,7 @@ export async function POST(request: Request) {
     { "gender": "Male/Female", "face_shape": "ShapeName" }
     `;
 
-    const analysisResult = await analysisModel.generateContent([
+    const analysisResult = await generateWithRetry(analysisModel, [
       analysisPrompt,
       {
         inlineData: {
@@ -120,7 +137,7 @@ Return JSON array ONLY in the following structure:
 DO NOT include any explanation outside JSON.
 `;
 
-    const textResult = await textModel.generateContent(metadataPrompt);
+    const textResult = await generateWithRetry(textModel, metadataPrompt);
     const textResponse = await textResult.response;
     console.log("textResponse", textResponse);
 
@@ -169,7 +186,7 @@ CRITICAL CONSTRAINTS - MUST FOLLOW:
 ${cleanGender === 'Male' ? 'REMINDER: This MUST look like a MAN with a new hairstyle, NOT a woman. Maintain all masculine characteristics.' : 'REMINDER: This MUST look like a WOMAN with a new hairstyle.'}
 `;
 
-      const imgResult = await imageModel.generateContent([
+      const imgResult = await generateWithRetry(imageModel, [
         imgPrompt,
         {
           inlineData: {

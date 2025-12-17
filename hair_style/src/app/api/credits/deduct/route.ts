@@ -49,10 +49,10 @@ export async function POST(request: NextRequest) {
             deductedCredits: creditsToDeduct
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Error deducting credits:", error);
         return NextResponse.json(
-            { error: error.message || "Failed to deduct credits" },
+            { error: error instanceof Error ? error.message : "Failed to deduct credits" },
             { status: 500 }
         );
     }

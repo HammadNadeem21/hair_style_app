@@ -60,6 +60,7 @@ type MultiSelectProps<T extends string> = {
   options: T[];
   selected: T[];
   onChange: (updated: T[]) => void;
+  display?: string;
 };
 
 export function MultiSelect<T extends string>({
@@ -67,6 +68,7 @@ export function MultiSelect<T extends string>({
   options,
   selected,
   onChange,
+  display
 }: MultiSelectProps<T>) {
 
   const toggleValue = (value: T) => {
@@ -78,7 +80,7 @@ export function MultiSelect<T extends string>({
   };
 
   return (
-    <div className="flex items-center justify-center gap-2">
+    <div className={`flex ${display} items-center justify-center gap-2`}>
       {label && <label className="font-medium text-primaryColor shadow-xl py-2 px-4 border border-primaryColor rounded-xl">{label}</label>}
 
       <div className="flex items-center gap-1 flex-wrap bg-gray-100/50 p-1 rounded-xl">

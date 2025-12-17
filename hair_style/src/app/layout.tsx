@@ -21,6 +21,7 @@ const geistMono = localFont({
 
 import { ImageProvider } from "@/context/ImageContext";
 import { AuthProvider } from "@/components/AuthProvider";
+import { CreditProvider } from "@/context/CreditContext";
 
 export default function RootLayout({
   children,
@@ -30,7 +31,7 @@ export default function RootLayout({
 
   const path = usePathname();
 
-  const hideNav = path === "/Scan" || path === "/result";
+  const hideNav = path === "/Scan";
 
   return (
     <html lang="en">
@@ -39,9 +40,11 @@ export default function RootLayout({
       >
         <ImageProvider>
           <AuthProvider>
-            {!hideNav && <Nav />}
-            {children}
-            {/* <Footer/> */}
+            <CreditProvider>
+              {!hideNav && <Nav />}
+              {children}
+              {/* <Footer/> */}
+            </CreditProvider>
           </AuthProvider>
         </ImageProvider>
       </body>

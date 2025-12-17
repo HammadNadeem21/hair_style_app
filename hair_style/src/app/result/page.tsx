@@ -25,7 +25,7 @@ const Page = () => {
   };
 
   return (
-    <div className='w-full min-h-screen flex flex-col items-center justify-start bg-gradient-to-b from-primaryColor/10 via-white to-white relative overflow-hidden py-5 px-4'>
+    <div className='w-full min-h-screen flex flex-col items-center justify-start bg-gradient-to-b from-primaryColor/10 via-white to-white relative overflow-hidden pt-24 pb-10 px-4'>
 
       {/* Background decoration */}
       <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-primaryColor/20 rounded-full blur-[100px] pointer-events-none" />

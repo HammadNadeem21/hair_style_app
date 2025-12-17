@@ -19,6 +19,8 @@ const SignUpPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async () => {
@@ -27,6 +29,7 @@ const SignUpPage = () => {
       return;
     }
 
+    setLoading(true);
     try {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
@@ -58,11 +61,18 @@ const SignUpPage = () => {
       } else {
         const data = await res.json();
         setError(data.message || "User registration failed.");
+        setLoading(false);
       }
     } catch (error) {
       console.log("Error during registration: ", error);
       setError("An unexpected error occurred.");
+      setLoading(false);
     }
+  };
+
+  const handleGoogleSignIn = () => {
+    setGoogleLoading(true);
+    signIn("google", { callbackUrl: "/" });
   };
 
   return (
@@ -89,7 +99,7 @@ const SignUpPage = () => {
         </div>
       </div>
 
-      <MyButton value='Sign Up' variant='default' className='mt-2' onClick={handleSubmit} />
+      <MyButton value='Sign Up' variant='default' className='mt-2' onClick={handleSubmit} loading={loading} />
 
       <div className="flex items-center w-full gap-2">
         <div className='h-[1px] bg-grayColor flex-1'></div>
@@ -100,7 +110,7 @@ const SignUpPage = () => {
 
       <div className='flex flex-col justify-center gap-3 w-full'>
 
-        <MyButton variant="outline" onClick={() => signIn("google", { callbackUrl: "/" })}>
+        <MyButton variant="outline" onClick={handleGoogleSignIn} loading={googleLoading}>
           <FaGoogle className="mr-2" /> Sign Up with Google
         </MyButton>
 

@@ -28,6 +28,50 @@ export async function POST(request: Request) {
     // ----------------------------------------------------------
     // STEP 1: Generate 3 hairstyle metadata objects (TEXT MODEL)
     // ----------------------------------------------------------
+    // ----------------------------------------------------------
+    // STEP 0: Detect Gender AND Face Shape (TEXT MODEL with Vision)
+    // ----------------------------------------------------------
+    const analysisModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const analysisPrompt = `
+    Analyze this image carefully.
+    1. Identify the apparent GENDER (Male or Female).
+    2. Identify the FACE SHAPE (e.g., Oval, Round, Square, Diamond, Heart, Oblong, Triangle).
+    
+    Return the result in this exact JSON format:
+    { "gender": "Male/Female", "face_shape": "ShapeName" }
+    `;
+
+    const analysisResult = await analysisModel.generateContent([
+      analysisPrompt,
+      {
+        inlineData: {
+          data: base64Image,
+          mimeType: file.type || "image/jpeg",
+        },
+      },
+    ]);
+    const analysisResponseText = await analysisResult.response.text();
+
+    // Clean and parse the analysis JSON
+    let cleanGender = "Male";
+    let faceShape = "Oval";
+
+    try {
+      const cleanedText = analysisResponseText.replace(/```json|```/g, "").trim();
+      const analysisData = JSON.parse(cleanedText);
+      cleanGender = analysisData.gender || "Male";
+      faceShape = analysisData.face_shape || "Oval";
+      console.log("Analysis Result:", { cleanGender, faceShape });
+    } catch (e) {
+      console.error("Failed to parse analysis JSON, using fallback", e);
+      // Fallback simple detection if JSON fails
+      if (analysisResponseText.toLowerCase().includes("female")) cleanGender = "Female";
+    }
+
+
+    // ----------------------------------------------------------
+    // STEP 1: Generate 3 hairstyle metadata objects (TEXT MODEL)
+    // ----------------------------------------------------------
     const textModel = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
       generationConfig: {
@@ -36,19 +80,39 @@ export async function POST(request: Request) {
     });
 
     const metadataPrompt = `
-You are an expert hairstylist.
+You are an expert high-end hairstylist.
+User Profile:
+- Gender: ${cleanGender}
+- Face Shape: ${faceShape}
+- Current Preferences: Length: ${hairLength}, Style: ${hairStyle}, Color: ${hairColor}
 
-Generate exactly 3 hairstyle variations based on the following user preferences:
-- Hair Length: ${hairLength}
-- Hair Style: ${hairStyle}
-- Hair Color: ${hairColor}
+TASK: Generate exactly 3 distinct hairstyle variations that are SPECIFICALLY SUITABLE for a ${faceShape} face shape.
+Do NOT just generate random styles. The styles must significantly improve the user's look based on their face shape.
+
+CRITICAL GENDER REQUIREMENTS:
+${cleanGender === 'Male' ? `
+- ALL hairstyles MUST be MASCULINE and appropriate for men
+- If Long Hair: suggest ONLY masculine long hairstyles (e.g., Man Bun, Rocker Long Hair, Viking Braids, Samurai Topknot, Surfer Waves, Metal/Rock Long Hair)
+- AVOID any feminine styling, soft curls, or traditionally female hairstyles
+- Focus on strong, bold, masculine aesthetics
+` : `
+- ALL hairstyles MUST be FEMININE and appropriate for women
+- Suggest elegant, stylish feminine hairstyles
+`}
+
+FACE SHAPE STRATEGY (${faceShape}):
+- If Round: Suggest styles that add height or angles to lengthen the face.
+- If Square: Suggest styles that soften the strong jawline.
+- If Oval: Suggest versatile styles that maintain balance.
+- If Heart: Suggest styles that add volume at the bottom/jawline.
+- If Diamond: Suggest styles that minimize cheek width.
 
 Return JSON array ONLY in the following structure:
 
 [
   {
     "hairstyle_name": "string",
-    "description": "string",
+    "description": "string (Start with 'Best for ${faceShape} faces because...')",
     "how_to_apply": "string"
   }
 ]
@@ -58,8 +122,18 @@ DO NOT include any explanation outside JSON.
 
     const textResult = await textModel.generateContent(metadataPrompt);
     const textResponse = await textResult.response;
+    console.log("textResponse", textResponse);
+
     const hairstyleList = JSON.parse(textResponse.text()); // array of 3 objects
-    console.log("res", hairstyleList);
+    // console.log("res", hairstyleList);
+
+    // Track total tokens used
+    let totalTokens = 0;
+
+    // Add tokens from text generation (hairstyle metadata)
+    if (textResponse.usageMetadata) {
+      totalTokens += textResponse.usageMetadata.totalTokenCount || 0;
+    }
 
 
     // ----------------------------------------------------------
@@ -76,16 +150,23 @@ DO NOT include any explanation outside JSON.
 
     for (const item of hairstyleList) {
       const imgPrompt = `
-This is a photo of the user.
-Modify ONLY the hair.
-Apply this hairstyle: ${item.hairstyle_name}.
+This is a photo of a ${cleanGender}.
+Modify ONLY the hair to match this hairstyle: ${item.hairstyle_name}.
 Description: ${item.description}.
-Constraint: Keep the face, skin tone, and head shape exactly the same.
-Generate a high-quality, realistic portrait.
-Ensure the face is fully visible and front-facing.
-Photorealistic, 8k, highly detailed.
-Do NOT change facial features, eye color, or skin texture.
-Blend the hair naturally with the existing head shape.
+
+CRITICAL CONSTRAINTS - MUST FOLLOW:
+1. Keep the face, facial structure, skin tone, and head shape EXACTLY the same
+2. ${cleanGender === 'Male' ?
+          'PRESERVE MASCULINE FEATURES: Keep strong jawline, masculine bone structure, male eyebrows, and all masculine facial characteristics. DO NOT soften features. DO NOT feminize the face in any way.' :
+          'PRESERVE FEMININE FEATURES: Keep feminine facial structure, soft features, and all feminine characteristics.'}
+3. Only change the hairstyle - nothing else
+4. The hairstyle should be clearly ${cleanGender === 'Male' ? 'MASCULINE and appropriate for men' : 'FEMININE and appropriate for women'}
+5. Blend the hair naturally with the existing head shape
+6. Generate a high-quality, realistic, photorealistic portrait (8k, highly detailed)
+7. Ensure the face is fully visible and front-facing
+8. Do NOT change: facial features, eye color, eye shape, nose, lips, skin texture, facial hair, or bone structure
+
+${cleanGender === 'Male' ? 'REMINDER: This MUST look like a MAN with a new hairstyle, NOT a woman. Maintain all masculine characteristics.' : 'REMINDER: This MUST look like a WOMAN with a new hairstyle.'}
 `;
 
       const imgResult = await imageModel.generateContent([
@@ -99,6 +180,13 @@ Blend the hair naturally with the existing head shape.
       ]);
 
       const imgResponse = await imgResult.response;
+      console.log("imgResponse", imgResponse);
+
+      // Add tokens from image generation
+      if (imgResponse.usageMetadata) {
+        totalTokens += imgResponse.usageMetadata.totalTokenCount || 0;
+      }
+
       const imgPart =
         imgResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData;
 
@@ -119,8 +207,11 @@ Blend the hair naturally with the existing head shape.
       });
     }
 
-    // Return array of 3 hairstyle objects
-    return NextResponse.json({ results: finalOutput });
+    // Return array of 3 hairstyle objects with total tokens
+    return NextResponse.json({
+      results: finalOutput,
+      totalTokens
+    });
 
   } catch (error: any) {
     console.error("Gemini API Error Details:", error);

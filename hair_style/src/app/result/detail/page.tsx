@@ -41,9 +41,9 @@ const DetailContent = () => {
     }
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-white pt-24">
             {/* Header Image */}
-            <div className="relative w-full h-[50vh] min-h-[400px] mt-[100px]">
+            <div className="relative w-full h-[50vh] min-h-[400px]">
 
 
                 <Image

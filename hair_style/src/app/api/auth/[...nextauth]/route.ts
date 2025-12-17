@@ -57,9 +57,22 @@ const handler = NextAuth({
     callbacks: {
         async session({ session, token }) {
             if (session.user && token.sub) {
-                session.user.name = token.name
-                session.user.email = token.email
-                session.user.image = token.picture
+                // Fetch the latest user data to get current credits
+                await dbConnect();
+
+                // If we have an email, we can find by email which is safer or by id
+                // token.sub is the providerAccountId or user id depending on flow
+                // For safety, let's use the email from token if available
+                const userData = await User.findOne({ email: token.email });
+
+                session.user.name = token.name;
+                session.user.email = token.email;
+                session.user.image = token.picture;
+
+                if (userData) {
+                    session.user.credits = userData.credits;
+                    session.user.id = userData._id.toString();
+                }
             }
             return session
         }

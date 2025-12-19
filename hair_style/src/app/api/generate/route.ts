@@ -30,6 +30,12 @@ export async function POST(request: Request) {
     const hairLength = formData.get("hair_length") as string;
     const hairStyle = formData.get("hair_style") as string;
     const hairColor = formData.get("hair_color") as string;
+    const beardLength = formData.get("beard_length") as string;
+    const beardCoverage = formData.get("beard_coverage") as string;
+
+    // Parse selection flags (convert string "true"/"false" to boolean)
+    const isHairSelected = formData.get("is_hair_selected") === "true";
+    const isBeardSelected = formData.get("is_beard_selected") === "true";
 
     if (!file) {
       return NextResponse.json(
@@ -37,6 +43,8 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+
 
     // Convert image to Base64
     const arrayBuffer = await file.arrayBuffer();
@@ -97,45 +105,52 @@ export async function POST(request: Request) {
     });
 
     const metadataPrompt = `
-You are an expert high-end hairstylist.
-User Profile:
-- Gender: ${cleanGender}
-- Face Shape: ${faceShape}
-- Current Preferences: Length: ${hairLength}, Style: ${hairStyle}, Color: ${hairColor}
+    You are an expert high-end hairstylist.
+    User Profile:
+    - Gender: ${cleanGender}
+    - Face Shape: ${faceShape}
+    - Current Preferences:
+      ${isHairSelected ? `- Hair: Length: ${hairLength}, Style: ${hairStyle}, Color: ${hairColor}` : '- Hair: KEEP CURRENT STYLE (Do not change)'}
+      ${isBeardSelected ? `- Beard: Length: ${beardLength}, Coverage: ${beardCoverage}` : '- Beard: KEEP CURRENT STYLE (Do not change)'}
 
-TASK: Generate exactly 3 distinct hairstyle variations that are SPECIFICALLY SUITABLE for a ${faceShape} face shape.
-Do NOT just generate random styles. The styles must significantly improve the user's look based on their face shape.
+    TASK: Generate exactly 3 distinct variations based on the user's selection.
+    User Selection: ${isHairSelected && isBeardSelected ? 'Change BOTH Hair and Beard' : isHairSelected ? 'Change HAIR Only' : 'Change BEARD Only'}.
 
-CRITICAL GENDER REQUIREMENTS:
-${cleanGender === 'Male' ? `
-- ALL hairstyles MUST be MASCULINE and appropriate for men
-- If Long Hair: suggest ONLY masculine long hairstyles (e.g., Man Bun, Rocker Long Hair, Viking Braids, Samurai Topknot, Surfer Waves, Metal/Rock Long Hair)
-- AVOID any feminine styling, soft curls, or traditionally female hairstyles
-- Focus on strong, bold, masculine aesthetics
-` : `
-- ALL hairstyles MUST be FEMININE and appropriate for women
-- Suggest elegant, stylish feminine hairstyles
-`}
+    ${isHairSelected ? `
+    HAIR STRATEGY (Face Shape: ${faceShape}):
+    - If Round: Suggest styles that add height or angles.
+    - If Square: Suggest styles that soften the jawline.
+    - If Oval: Suggest versatile styles.
+    - If Heart: Suggest styles that add volume at the bottom/jawline.
+    - If Diamond: Suggest styles that minimize cheek width.
+    ` : 'HAIR STRATEGY: Keep the hair exactly as it is. Focus on the beard.'}
 
-FACE SHAPE STRATEGY (${faceShape}):
-- If Round: Suggest styles that add height or angles to lengthen the face.
-- If Square: Suggest styles that soften the strong jawline.
-- If Oval: Suggest versatile styles that maintain balance.
-- If Heart: Suggest styles that add volume at the bottom/jawline.
-- If Diamond: Suggest styles that minimize cheek width.
+    ${isBeardSelected ? `
+    BEARD STRATEGY:
+    - Suggest a beard style that matches the preferences (${beardLength}, ${beardCoverage}) and complements the ${faceShape} face.
+    ` : 'BEARD STRATEGY: Keep the facial hair exactly as it is.'}
 
-Return JSON array ONLY in the following structure:
+    CRITICAL GENDER REQUIREMENTS:
+    ${cleanGender === 'Male' ? `
+    - ALL suggestions MUST be MASCULINE
+    - Focus on strong, bold, masculine aesthetics
+    ` : `
+    - ALL suggestions MUST be FEMININE
+    - Suggest elegant, stylish feminine hairstyles
+    `}
 
-[
-  {
-    "hairstyle_name": "string",
-    "description": "string (Start with 'Best for ${faceShape} faces because...')",
-    "how_to_apply": "string"
-  }
-]
+    Return JSON array ONLY in the following structure:
 
-DO NOT include any explanation outside JSON.
-`;
+    [
+      {
+        "hairstyle_name": "string (Name of the style - Hair, Beard, or Both)",
+        "description": "string (Describe the ${isHairSelected ? 'hairstyle' : ''} ${isHairSelected && isBeardSelected ? 'and' : ''} ${isBeardSelected ? 'beard style' : ''} and why it fits)",
+        "how_to_apply": "string"
+      }
+    ]
+
+    DO NOT include any explanation outside JSON.
+    `;
 
     const textResult = await generateWithRetry(textModel, metadataPrompt);
     const textResponse = await textResult.response;
@@ -167,24 +182,27 @@ DO NOT include any explanation outside JSON.
 
     for (const item of hairstyleList) {
       const imgPrompt = `
-This is a photo of a ${cleanGender}.
-Modify ONLY the hair to match this hairstyle: ${item.hairstyle_name}.
-Description: ${item.description}.
+      This is a photo of a ${cleanGender}.
+      MASKING/MODIFICATION INSTRUCTIONS:
+      ${isHairSelected ? `1. Modify the HAIR to match this style: ${item.hairstyle_name}.` : '1. DO NOT CHANGE THE HAIRSTYLE. Keep the hair exactly as it is.'}
+      ${isBeardSelected ? `2. Modify the BEARD/FACIAL HAIR to match: ${item.description} (based on preferences: ${beardLength}, ${beardCoverage}).` : '2. DO NOT CHANGE THE FACIAL HAIR. Keep the beard/mustache/shave exactly as it is.'}
+      
+      Description: ${item.description}.
 
-CRITICAL CONSTRAINTS - MUST FOLLOW:
-1. Keep the face, facial structure, skin tone, and head shape EXACTLY the same
-2. ${cleanGender === 'Male' ?
-          'PRESERVE MASCULINE FEATURES: Keep strong jawline, masculine bone structure, male eyebrows, and all masculine facial characteristics. DO NOT soften features. DO NOT feminize the face in any way.' :
-          'PRESERVE FEMININE FEATURES: Keep feminine facial structure, soft features, and all feminine characteristics.'}
-3. Only change the hairstyle - nothing else
-4. The hairstyle should be clearly ${cleanGender === 'Male' ? 'MASCULINE and appropriate for men' : 'FEMININE and appropriate for women'}
-5. Blend the hair naturally with the existing head shape
-6. Generate a high-quality, realistic, photorealistic portrait (8k, highly detailed)
-7. Ensure the face is fully visible and front-facing
-8. Do NOT change: facial features, eye color, eye shape, nose, lips, skin texture, facial hair, or bone structure
+      CRITICAL CONSTRAINTS - MUST FOLLOW:
+      1. Keep the face, facial structure, skin tone, and head shape EXACTLY the same
+      2. ${cleanGender === 'Male' ?
+          'PRESERVE MASCULINE FEATURES: Keep strong jawline, masculine bone structure, male eyebrows. DO NOT feminize.' :
+          'PRESERVE FEMININE FEATURES: Keep feminine facial structure, soft features.'}
+      3. ONLY change the ${isHairSelected && isBeardSelected ? 'Hair AND Beard' : isHairSelected ? 'Hair' : 'Beard'} - nothing else.
+      4. The look should be clearly ${cleanGender === 'Male' ? 'MASCULINE' : 'FEMININE'}
+      5. Generate a high-quality, realistic, photorealistic portrait (8k, highly detailed)
+      6. Do NOT change: facial features, eye color, eye shape, nose, lips, skin texture, bone structure.
+      ${!isHairSelected ? '7. REMINDER: DO NOT CHANGE THE HAIR.' : ''}
+      ${!isBeardSelected ? '8. REMINDER: DO NOT CHANGE THE FACIAL HAIR.' : ''}
 
-${cleanGender === 'Male' ? 'REMINDER: This MUST look like a MAN with a new hairstyle, NOT a woman. Maintain all masculine characteristics.' : 'REMINDER: This MUST look like a WOMAN with a new hairstyle.'}
-`;
+      ${cleanGender === 'Male' ? 'REMINDER: This MUST look like a MAN.' : 'REMINDER: This MUST look like a WOMAN.'}
+      `;
 
       const imgResult = await generateWithRetry(imageModel, [
         imgPrompt,

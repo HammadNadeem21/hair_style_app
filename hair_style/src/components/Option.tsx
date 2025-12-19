@@ -8,7 +8,8 @@ import { SmallText } from "./Text_Style/Small_text";
 import { IoCameraOutline } from "react-icons/io5";
 import { useDropzone } from "react-dropzone";
 import Image from "next/image";
-import ColorPicker from "./ColorPicker";
+
+// import ColorPicker from "./ColorPicker";
 import { MyButton } from "./Button";
 import { useRouter } from "next/navigation";
 import { useImageContext } from "@/context/ImageContext";
@@ -24,9 +25,10 @@ const Option = () => {
   const [preview, setPreview] = useState<string | null>(null);
   const [hairLength, setHairLength] = useState<"long" | "short" | null>(null);
   const [hairStyle, setHairStyle] = useState<Array<"asian" | "western">>([]);
-  const [color, setColor] = useState("#aabbcc");
-  const [open, setOpen] = useState(false);
-  const pickerRef = useRef<HTMLDivElement>(null);
+
+  const [color, setColor] = useState("#090806"); // Default to Black
+  // const [open, setOpen] = useState(false);
+  // const pickerRef = useRef<HTMLDivElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [beardLength, setBeardLength] = useState<"no moustache" | "light moustache" | "thick & dominant" | null>(null);
@@ -53,18 +55,7 @@ const Option = () => {
   const { setCredits } = useCreditContext();
   const { data: session } = useSession();
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
 
 
@@ -105,8 +96,11 @@ const Option = () => {
   const handleUpload = async () => {
     if (!file) return alert("Please upload a selfie first!");
 
-    if (!hairLength && hairStyle.length === 0) {
-      return alert("Please select some style options first!");
+    const isHairValid = selectedOptions.hair && (hairLength || hairStyle.length > 0);
+    const isBeardValid = selectedOptions.beared && (beardLength || beardCoverage.length > 0);
+
+    if (!isHairValid && !isBeardValid) {
+      return alert("Please select valid options for either Hair or Beard!");
     }
 
     setLoading(true);
@@ -127,6 +121,10 @@ const Option = () => {
     formData.append("hair_length", hairLength || "");
     formData.append("hair_style", hairStyle.join(", "));
     formData.append("hair_color", color);
+    formData.append("beard_length", beardLength || "");
+    formData.append("beard_coverage", beardCoverage.join(", "));
+    formData.append("is_hair_selected", String(selectedOptions.hair));
+    formData.append("is_beard_selected", String(selectedOptions.beared));
 
     try {
       // Check if user is logged in
@@ -321,34 +319,38 @@ const Option = () => {
             )}
 
             {hasSelectedOption && (
-              <div className="relative flex items-center justify-center w-full z-20">
-                <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
-                  <button
-                    onClick={() => setOpen(prev => !prev)}
-                    className="text-sm font-medium py-3 px-3 rounded-lg transition-colors bg-primaryColor text-white"
-                  >
-                    Hair Color
-                  </button>
-                  <div className="h-4 w-[1px] bg-gray-300" />
-                  <button
-                    onClick={() => setOpen(prev => !prev)}
-                    className="flex items-center gap-2"
-                  >
-                    <div
-                      className="w-6 h-6 rounded-full border border-gray-200 shadow-sm ring-2 ring-white"
-                      style={{ backgroundColor: color }}
-                    />
-                  </button>
+              <div className="flex flex-col items-center justify-center w-full gap-3 mt-2 animate-fadeIn">
+                <Heading_2 value="Hair Color" className="text-sm font-semibold text-gray-700" />
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  {[
+                    { hex: "#090806", name: "Black" },
+                    { hex: "#3B3024", name: "Dark Brown" },
+                    { hex: "#4E433F", name: "Med Brown" },
+                    { hex: "#A7856A", name: "Light Brown" },
+                    { hex: "#B7A69E", name: "Gray" },
+                    { hex: "#D6C4C2", name: "Platinum" },
+                    { hex: "#DEBC99", name: "Blonde" },
+                    { hex: "#8D4A43", name: "Red/Auburn" },
+                    { hex: "#FAEBD7", name: "White" }, // AntiqueWhite
+                  ].map((c) => (
+                    <button
+                      key={c.hex}
+                      onClick={() => setColor(c.hex)}
+                      className={`w-10 h-10 rounded-full border-2 shadow-sm transition-all duration-300 transform hover:scale-110 ${color === c.hex
+                        ? "border-primaryColor ring-2 ring-primaryColor/30 scale-110"
+                        : "border-gray-200 hover:border-gray-400"
+                        }`}
+                      style={{ backgroundColor: c.hex }}
+                      title={c.name}
+                    >
+                      {color === c.hex && (
+                        <div className="w-full h-full flex items-center justify-center text-white/80 drop-shadow-md">
+                          ✓
+                        </div>
+                      )}
+                    </button>
+                  ))}
                 </div>
-
-                {open && (
-                  <div
-                    ref={pickerRef}
-                    className="absolute bottom-full mb-3 transition-all duration-300 animate-fadeIn bg-white p-3 rounded-2xl shadow-xl border border-gray-100"
-                  >
-                    <ColorPicker color={color} onChange={setColor} />
-                  </div>
-                )}
               </div>
             )}
 

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { MdOutlineFileUpload } from "react-icons/md";
 import { X } from "lucide-react";
 import { Heading_2 } from "./Text_Style/Heading_2";

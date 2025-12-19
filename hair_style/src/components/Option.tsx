@@ -20,6 +20,18 @@ import Hair_fields from "./Fields/Hair_fields";
 import Beared_fields from "./Fields/Beared_fields";
 
 
+const HAIR_COLORS = [
+  { hex: "#090806", name: "Black" },
+  { hex: "#3B3024", name: "Dark Brown" },
+  { hex: "#4E433F", name: "Medium Brown" },
+  { hex: "#A7856A", name: "Light Brown" },
+  { hex: "#B7A69E", name: "Gray" },
+  { hex: "#D6C4C2", name: "Platinum" },
+  { hex: "#DEBC99", name: "Blonde" },
+  { hex: "#8D4A43", name: "Red/Auburn" },
+  { hex: "#FAEBD7", name: "White" },
+];
+
 const Option = () => {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -121,6 +133,11 @@ const Option = () => {
     formData.append("hair_length", hairLength || "");
     formData.append("hair_style", hairStyle.join(", "));
     formData.append("hair_color", color);
+
+    // Find color name
+    const selectedColorObj = HAIR_COLORS.find(c => c.hex === color);
+    formData.append("hair_color_name", selectedColorObj ? selectedColorObj.name : "Natural");
+
     formData.append("beard_length", beardLength || "");
     formData.append("beard_coverage", beardCoverage.join(", "));
     formData.append("is_hair_selected", String(selectedOptions.hair));
@@ -322,17 +339,7 @@ const Option = () => {
               <div className="flex flex-col items-center justify-center w-full gap-3 mt-2 animate-fadeIn">
                 <Heading_2 value="Hair Color" className="text-sm font-semibold text-gray-700" />
                 <div className="flex flex-wrap items-center justify-center gap-3">
-                  {[
-                    { hex: "#090806", name: "Black" },
-                    { hex: "#3B3024", name: "Dark Brown" },
-                    { hex: "#4E433F", name: "Med Brown" },
-                    { hex: "#A7856A", name: "Light Brown" },
-                    { hex: "#B7A69E", name: "Gray" },
-                    { hex: "#D6C4C2", name: "Platinum" },
-                    { hex: "#DEBC99", name: "Blonde" },
-                    { hex: "#8D4A43", name: "Red/Auburn" },
-                    { hex: "#FAEBD7", name: "White" }, // AntiqueWhite
-                  ].map((c) => (
+                  {HAIR_COLORS.map((c) => (
                     <button
                       key={c.hex}
                       onClick={() => setColor(c.hex)}

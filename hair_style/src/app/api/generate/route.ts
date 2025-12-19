@@ -30,6 +30,7 @@ export async function POST(request: Request) {
     const hairLength = formData.get("hair_length") as string;
     const hairStyle = formData.get("hair_style") as string;
     const hairColor = formData.get("hair_color") as string;
+    const hairColorName = formData.get("hair_color_name") as string;
     const beardLength = formData.get("beard_length") as string;
     const beardCoverage = formData.get("beard_coverage") as string;
 
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
     }
 
 
-
+    console.log("hair_color", hairColor);
     // Convert image to Base64
     const arrayBuffer = await file.arrayBuffer();
     const base64Image = Buffer.from(arrayBuffer).toString("base64");
@@ -86,12 +87,13 @@ export async function POST(request: Request) {
       const analysisData = JSON.parse(cleanedText);
       cleanGender = analysisData.gender || "Male";
       faceShape = analysisData.face_shape || "Oval";
-      console.log("Analysis Result:", { cleanGender, faceShape });
+      // console.log("Analysis Result:", { cleanGender, faceShape });
     } catch (e) {
       console.error("Failed to parse analysis JSON, using fallback", e);
       // Fallback simple detection if JSON fails
       if (analysisResponseText.toLowerCase().includes("female")) cleanGender = "Female";
     }
+
 
 
     // ----------------------------------------------------------
@@ -110,7 +112,7 @@ export async function POST(request: Request) {
     - Gender: ${cleanGender}
     - Face Shape: ${faceShape}
     - Current Preferences:
-      ${isHairSelected ? `- Hair: Length: ${hairLength}, Style: ${hairStyle}, Color: ${hairColor}` : '- Hair: KEEP CURRENT STYLE (Do not change)'}
+      ${isHairSelected ? `- Hair: Length: ${hairLength}, Style: ${hairStyle}, Color: ${hairColorName || hairColor}` : '- Hair: KEEP CURRENT STYLE (Do not change)'}
       ${isBeardSelected ? `- Beard: Length: ${beardLength}, Coverage: ${beardCoverage}` : '- Beard: KEEP CURRENT STYLE (Do not change)'}
 
     TASK: Generate exactly 3 distinct variations based on the user's selection.
@@ -136,8 +138,15 @@ export async function POST(request: Request) {
     - Focus on strong, bold, masculine aesthetics
     ` : `
     - ALL suggestions MUST be FEMININE
+    - ALL suggestions MUST be FEMININE
     - Suggest elegant, stylish feminine hairstyles
     `}
+
+    ${isHairSelected ? `
+    CRITICAL COLOR INSTRUCTION:
+    The user has selected the hair color: "${hairColorName || hairColor}".
+    ALL generated hairstyles MUST explicitly use this color.
+    ` : ''}
 
     Return JSON array ONLY in the following structure:
 
@@ -154,7 +163,7 @@ export async function POST(request: Request) {
 
     const textResult = await generateWithRetry(textModel, metadataPrompt);
     const textResponse = await textResult.response;
-    console.log("textResponse", textResponse);
+    // console.log("textResponse", textResponse);
 
     const hairstyleList = JSON.parse(textResponse.text()); // array of 3 objects
     // console.log("res", hairstyleList);
@@ -185,7 +194,8 @@ export async function POST(request: Request) {
       This is a photo of a ${cleanGender}.
       MASKING/MODIFICATION INSTRUCTIONS:
       ${isHairSelected ? `1. Modify the HAIR to match this style: ${item.hairstyle_name}.` : '1. DO NOT CHANGE THE HAIRSTYLE. Keep the hair exactly as it is.'}
-      ${isBeardSelected ? `2. Modify the BEARD/FACIAL HAIR to match: ${item.description} (based on preferences: ${beardLength}, ${beardCoverage}).` : '2. DO NOT CHANGE THE FACIAL HAIR. Keep the beard/mustache/shave exactly as it is.'}
+      ${isHairSelected ? `2. COLOR INSTRUCTION: Dye the hair to the exact color: ${hairColorName || hairColor}. Ensure it looks natural but matches the requested color.` : ''}
+      ${isBeardSelected ? `3. Modify the BEARD/FACIAL HAIR to match: ${item.description} (based on preferences: ${beardLength}, ${beardCoverage}).` : '3. DO NOT CHANGE THE FACIAL HAIR. Keep the beard/mustache/shave exactly as it is.'}
       
       Description: ${item.description}.
 
@@ -215,7 +225,7 @@ export async function POST(request: Request) {
       ]);
 
       const imgResponse = await imgResult.response;
-      console.log("imgResponse", imgResponse);
+      // console.log("imgResponse", imgResponse);
 
       // Add tokens from image generation
       if (imgResponse.usageMetadata) {

@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import React from 'react'
 import { SmallText } from './Text_Style/Small_text'
+import { Download } from 'lucide-react'
 
 interface ResultCardProps {
   image?: string;
@@ -11,6 +12,9 @@ interface ResultCardProps {
 }
 
 const ResultCard = ({ image, title, description, onImageClick, onDetailClick }: ResultCardProps) => {
+
+
+
   return (
     <div
       className='group relative flex flex-col items-center justify-start gap-3 rounded-2xl p-3 bg-white/40 backdrop-blur-md border border-white/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden'
@@ -28,6 +32,20 @@ const ResultCard = ({ image, title, description, onImageClick, onDetailClick }: 
         />
         {/* Overlay gradient for text readability if needed, or just style */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+        {/* Download Button */}
+        {/* Download Button */}
+        {image && (
+          <a
+            href={image}
+            download={`hairstyle-${title?.replace(/\s+/g, '-').toLowerCase() || 'generated'}.png`}
+            onClick={(e) => e.stopPropagation()}
+            className="absolute top-2 right-2 p-2 bg-white/20 hover:bg-white/40 border border-white/60 text-white rounded-full backdrop-blur-md transition-all duration-300 z-10 hover:scale-110"
+            title="Download Result"
+          >
+            <Download size={18} />
+          </a>
+        )}
       </div>
 
       <div className="w-full flex flex-col items-center gap-1 px-1 pb-2">

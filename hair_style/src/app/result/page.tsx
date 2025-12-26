@@ -46,6 +46,7 @@ const Page = () => {
                 image={item.image || undefined}
                 title={item.hairstyle_name}
                 description={item.description}
+                howToApply={item.how_to_apply}
                 onImageClick={() => handleImageClick(item.image || "/selfie3.jpeg")}
                 onDetailClick={() => handleDetailClick(index)}
               />

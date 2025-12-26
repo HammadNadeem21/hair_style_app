@@ -6,6 +6,7 @@ import { useImageContext, HairstyleResult } from "@/context/ImageContext";
 import Image from "next/image";
 import { Heading_2 } from "@/components/Text_Style/Heading_2";
 import { ArrowLeft } from "lucide-react";
+import { getHairstyleById } from "@/utils/db";
 
 const DetailContent = () => {
     const searchParams = useSearchParams();
@@ -15,8 +16,22 @@ const DetailContent = () => {
 
     useEffect(() => {
         const index = searchParams.get("index");
+        const savedId = searchParams.get("savedId");
 
-        if (index !== null) {
+        if (savedId) {
+            // Load from DB
+            getHairstyleById(savedId).then((item) => {
+                if (item) {
+                    setHairstyle({
+                        hairstyle_name: item.title || "Saved Style",
+                        description: item.description || "",
+                        how_to_apply: item.how_to_apply || "",
+                        image: item.image
+                    } as HairstyleResult);
+                }
+            });
+        }
+        else if (index !== null) {
             const i = parseInt(index);
             if (resultImages && resultImages[i]) {
                 setHairstyle(resultImages[i]);

@@ -22,6 +22,7 @@ const geistMono = localFont({
 import { ImageProvider } from "@/context/ImageContext";
 import { AuthProvider } from "@/components/AuthProvider";
 import { CreditProvider } from "@/context/CreditContext";
+import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
@@ -43,6 +44,7 @@ export default function RootLayout({
             <CreditProvider>
               {!hideNav && <Nav />}
               {children}
+              <Toaster position="top-center" richColors />
               {/* <Footer/> */}
             </CreditProvider>
           </AuthProvider>

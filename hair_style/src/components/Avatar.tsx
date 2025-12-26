@@ -7,7 +7,8 @@ import {
 
 } from "@/components/ui/dropdown-menu";
 import { Avatar as UiAvatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, Coins } from "lucide-react";
+import { LogOut, Coins, Bookmark } from "lucide-react";
+import Link from "next/link";
 
 interface AvatarMenuProps {
   image?: string;
@@ -58,6 +59,15 @@ export function Avatar({
             <span className="text-sm font-bold text-primaryColor">{credits.toFixed(1)}</span>
           </div>
         </div>
+
+        <DropdownMenuSeparator />
+
+        <Link href="/saved">
+          <DropdownMenuItem className="cursor-pointer focus:bg-indigo-50 focus:text-primaryColor p-2 rounded-md">
+            <Bookmark className="mr-2 h-4 w-4" />
+            Saved Collection
+          </DropdownMenuItem>
+        </Link>
 
         <DropdownMenuSeparator />
 

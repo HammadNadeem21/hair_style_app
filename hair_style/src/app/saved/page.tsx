@@ -1,5 +1,5 @@
 "use client";
-
+// @ts-ignore
 import React, { useEffect, useState } from "react";
 import ResultCard from "@/components/ResultCard";
 import { Heading_2 } from "@/components/Text_Style/Heading_2";

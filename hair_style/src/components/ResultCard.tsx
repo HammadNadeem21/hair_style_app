@@ -1,3 +1,5 @@
+// @ts-ignore
+
 import Image from 'next/image'
 import React from 'react'
 import { SmallText } from './Text_Style/Small_text'

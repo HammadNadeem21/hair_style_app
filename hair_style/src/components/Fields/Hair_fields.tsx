@@ -20,13 +20,13 @@ export default function Hair_fields({
 
     return (
         <div className="">
-            <SmallText value='Hair Feilds' textColor='text-primaryColor' className='text-left text-sm font-bold' />
-            <div className="flex flex-col items-center gap-4 w-full">
+            {/* <SmallText value='Hair Feilds' textColor='text-primaryColor' className='text-left text-sm font-bold' /> */}
+            <div className="flex flex-col items-start gap-4 w-full">
 
-                <div className='flex flex-col items-center gap-2 w-full'>
+                <div className='flex flex-col items-start mt-2 gap-2 w-full'>
 
-                    <label className='text-sm font-medium text-primaryColor uppercase tracking-wider shadow-xl py-2 px-4 border border-primaryColor rounded-xl'>Hair Length</label>
-                    <div className='flex items-center justify-center gap-2 bg-gray-100/50 p-1.5 rounded-xl w-full max-w-[280px]'>
+                    <label className='font-bold text-sky-500 text-sm'>Select Hair Length: </label>
+                    <div className='flex flex-col items-start justify-center gap-2 bg-gray-100/50 p-1.5 rounded-xl w-full max-w-[280px]'>
                         <button
                             className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${hairLength === "long" ? 'bg-primaryColor text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
                                 }`}
@@ -46,10 +46,11 @@ export default function Hair_fields({
                 </div>
 
                 <MultiSelect
-                    label="Hair Styles"
+                    label="Select Hair Styles: "
                     options={["asian", "western"]}
                     selected={hairStyle}
                     onChange={setHairStyle}
+
                 />
 
             </div>

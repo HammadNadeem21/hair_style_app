@@ -60,7 +60,6 @@ type MultiSelectProps<T extends string> = {
   options: T[];
   selected: T[];
   onChange: (updated: T[]) => void;
-  display?: string;
 };
 
 export function MultiSelect<T extends string>({
@@ -68,7 +67,6 @@ export function MultiSelect<T extends string>({
   options,
   selected,
   onChange,
-  display
 }: MultiSelectProps<T>) {
 
   const toggleValue = (value: T) => {
@@ -80,14 +78,14 @@ export function MultiSelect<T extends string>({
   };
 
   return (
-    <div className={`flex ${display} items-center justify-center gap-2`}>
-      {label && <label className="font-medium text-primaryColor shadow-xl py-2 px-4 border border-primaryColor rounded-xl">{label}</label>}
+    <div className={`flex flex-col items-start justify-center gap-2 w-full`}>
+      {label && <label className="font-bold text-sky-500 text-sm w-full text-left">{label}</label>}
 
-      <div className="flex items-center gap-1 flex-wrap bg-gray-100/50 p-1 rounded-xl">
+      <div className="flex flex-col items-start gap-1 flex-wrap bg-gray-100/50 p-1 rounded-xl">
         {options.map((opt) => (
           <button
             key={opt}
-            className={`py-2 px-4 rounded-lg text-sm font-medium transition-all duration-300 ${selected.includes(opt)
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${selected.includes(opt)
               ? "bg-primaryColor text-white shadow-sm"
               : "text-gray-500 hover:text-gray-700"
               }`}

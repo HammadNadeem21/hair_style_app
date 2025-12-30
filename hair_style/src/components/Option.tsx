@@ -294,7 +294,7 @@ const Option = () => {
           </div>
 
           {/* Controls */}
-          <div className="flex flex-col items-center justify-center gap-4 w-full">
+          <div className="flex flex-col items-start justify-center gap-4 w-full">
 
             <div className="flex items-center justify-center gap-4 w-full">
               <button
@@ -336,8 +336,8 @@ const Option = () => {
             )}
 
             {hasSelectedOption && (
-              <div className="flex flex-col items-center justify-center w-full gap-3 mt-2 animate-fadeIn">
-                <Heading_2 value="Hair Color" className="text-sm font-semibold text-gray-700" />
+              <div className="flex flex-col items-start justify-center w-full gap-3 mt-2 animate-fadeIn">
+                <Heading_2 value="Select Hair Color:" className="font-bold text-sky-500 text-sm" />
                 <div className="flex flex-wrap items-center justify-center gap-3">
                   {HAIR_COLORS.map((c) => (
                     <button

@@ -2,7 +2,6 @@
 
 import React from 'react'
 import { MultiSelect } from '@/components/MultiSelector'
-import { SmallText } from '../Text_Style/Small_text';
 
 interface HairFieldsProps {
     hairLength: "long" | "short" | null;

@@ -35,7 +35,7 @@ const Page = () => {
       const historyState = { lightboxOpen: true };
       window.history.pushState(historyState, '');
 
-      const handlePopState = (event: PopStateEvent) => {
+      const handlePopState = () => {
         // When back button is pressed, close the lightbox
         setLightboxImage(null);
         // Prevent going back to previous page by pushing forward again

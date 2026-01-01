@@ -32,7 +32,7 @@ export default function RootLayout({
 
   const path = usePathname();
 
-  const hideNav = path === "/Scan";
+  const hideNav = ["/Scan", "/sign_in", "/sign_up"].includes(path);
 
   return (
     <html lang="en">

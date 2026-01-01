@@ -12,6 +12,7 @@ import { Heading_2 } from '@/components/Text_Style/Heading_2'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 
 const SignUpPage = () => {
@@ -44,6 +45,7 @@ const SignUpPage = () => {
       });
 
       if (res.ok) {
+        toast.success("Account created successfully!");
         // Automatically sign in after registration
         const signInRes = await signIn("credentials", {
           email,
@@ -52,6 +54,7 @@ const SignUpPage = () => {
         });
 
         if (signInRes?.error) {
+          toast.warning("Account created, but automatic sign-in failed. Please sign in manually.");
           setError("Registration successful, but login failed. Please login manually.");
           router.push("/sign_in");
         } else {
@@ -60,6 +63,7 @@ const SignUpPage = () => {
 
       } else {
         const data = await res.json();
+        toast.error(data.message || "User registration failed.");
         setError(data.message || "User registration failed.");
         setLoading(false);
       }
@@ -76,57 +80,56 @@ const SignUpPage = () => {
   };
 
   return (
-    <div className='max-w-[440px] max-h-[880px] bg-white flex flex-col gap-4 items-center py-8 mt-10 px-5'>
-      <Logo />
-      <div className="flex flex-col gap-[2px] w-full justify-center items-center">
-        <Heading_1 value="Create Account" />
-        <Heading_2 value='Join us to get started' textColor='text-grayColor' />
-      </div>
-      <InputFields fields={[
-        { type: 'name', placeholder: 'Name', onChange: (e) => setName(e.target.value) },
-        { type: 'email', placeholder: 'Email', onChange: (e) => setEmail(e.target.value) },
-        { type: 'password', placeholder: 'Password', onChange: (e) => setPassword(e.target.value) }
-      ]} />
+    <div className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primaryColor/10 via-white to-blue-50 relative overflow-hidden py-10">
+      {/* Background decoration */}
+      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-primaryColor/20 rounded-full blur-[100px]" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-blue-400/20 rounded-full blur-[100px]" />
 
-      {error && <div className="text-red-500 text-sm">{error}</div>}
-
-      <div className='flex items-center justify-start w-full gap-2'>
-
-        <input type="checkbox" className='cursor-pointer' />
-        <div className="flex gap-1">
-          <SmallText value="I agree to the" textColor='text-grayColor' />
-          <SmallText value="Terms of Service" textColor='text-primaryColor' className='cursor-pointer' />
+      <div className='z-10 max-w-[440px] w-full bg-white/60 backdrop-blur-xl border border-white/50 rounded-3xl shadow-2xl flex flex-col gap-4 items-center py-8 px-8 mx-4'>
+        <Logo />
+        <div className="flex flex-col gap-[2px] w-full justify-center items-center">
+          <Heading_1 value="Create Account" />
+          <Heading_2 value='Join us to get started' textColor='text-gray-500' />
         </div>
+        <InputFields fields={[
+          { type: 'text', placeholder: 'Name', value: name, onChange: (e) => setName(e.target.value) },
+          { type: 'email', placeholder: 'Email', value: email, onChange: (e) => setEmail(e.target.value) },
+          { type: 'password', placeholder: 'Password', value: password, onChange: (e) => setPassword(e.target.value) }
+        ]} />
+
+        {error && <div className="text-red-500 text-sm">{error}</div>}
+
+        <div className='flex items-center justify-start w-full gap-2'>
+          <input type="checkbox" className='cursor-pointer' />
+          <div className="flex gap-1">
+            <SmallText value="I agree to the" textColor='text-gray-500' />
+            <SmallText value="Terms of Service" textColor='text-primaryColor' className='cursor-pointer font-bold' />
+          </div>
+        </div>
+
+        <MyButton value='Sign Up' variant='default' className='mt-2' onClick={handleSubmit} loading={loading} />
+
+        <div className="flex items-center w-full gap-2">
+          <div className='h-[1px] bg-gray-200 flex-1'></div>
+          <SmallText value="  Or continue with  " textColor="text-gray-400" />
+          <div className='h-[1px] bg-gray-200 w-auto flex-1'></div>
+        </div>
+
+        <div className='flex flex-col justify-center gap-3 w-full'>
+          <MyButton variant="outline" onClick={handleGoogleSignIn} loading={googleLoading}>
+            <FaGoogle className="mr-2" /> Sign Up with Google
+          </MyButton>
+        </div>
+
+        <div className="flex items-center justify-center gap-1">
+          <SmallText value="Already have an account?" textColor='text-gray-500' />
+          <Link href='/sign_in'>
+            <SmallText value='Sign In' textColor='text-primaryColor' className='cursor-pointer font-bold' />
+          </Link>
+        </div>
+
+        <SmallText value='Your data is securely processed and not stored after account creation.' textColor='text-gray-400' className='text-xs text-center' />
       </div>
-
-      <MyButton value='Sign Up' variant='default' className='mt-2' onClick={handleSubmit} loading={loading} />
-
-      <div className="flex items-center w-full gap-2">
-        <div className='h-[1px] bg-grayColor flex-1'></div>
-        <SmallText value="  Or continue with  " textColor="text-grayColor" />
-        <div className='h-[1px] bg-grayColor w-auto flex-1'></div>
-
-      </div>
-
-      <div className='flex flex-col justify-center gap-3 w-full'>
-
-        <MyButton variant="outline" onClick={handleGoogleSignIn} loading={googleLoading}>
-          <FaGoogle className="mr-2" /> Sign Up with Google
-        </MyButton>
-
-      </div>
-
-      {/* <SmallText value="Continue as Guest" textColor='text-primaryColor' className='cursor-pointer mt-4'/> */}
-      <div className="flex items-center justify-center gap-1">
-        <SmallText value="Already have an account?" textColor='text-grayColor' />
-        <Link href='/sign_in'>
-          <SmallText value='Sign In' textColor='text-primaryColor' className='cursor-pointer' />
-
-        </Link>
-
-      </div>
-
-      <SmallText value='Your data is securely processed and not stored after account creation.' textColor='text-grayColor' className='text-xs text-center' />
     </div>
   )
 }

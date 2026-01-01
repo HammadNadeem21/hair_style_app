@@ -81,13 +81,13 @@ export function MultiSelect<T extends string>({
     <div className={`flex flex-col items-start justify-center gap-2 w-full`}>
       {label && <label className="font-bold text-sky-500 text-sm w-full text-left">{label}</label>}
 
-      <div className="flex flex-col items-start gap-1 flex-wrap bg-gray-100/50 p-1 rounded-xl">
+      <div className="grid grid-cols-2 gap-2 bg-gray-100/50 p-1.5 rounded-xl w-full">
         {options.map((opt) => (
           <button
             key={opt}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${selected.includes(opt)
-              ? "bg-primaryColor text-white shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
+            className={`py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${selected.includes(opt)
+              ? "bg-primaryColor text-white shadow-md"
+              : "text-gray-500 bg-grayColor/15"
               }`}
             onClick={() => toggleValue(opt)}
           >

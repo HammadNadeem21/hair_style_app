@@ -20,16 +20,15 @@ export default function Beared_fields({
     setBeardLength
 }: BeardFieldsProps) {
     return (
-        <div className="">
+        <div className="w-full">
             {/* <SmallText value='Beard Fields' textColor='text-sky-500' className='text-left text-lg font-bold mt-4' /> */}
-            <div className="flex flex-col items-start gap-4 w-full">
-
-                <div className='flex flex-col items-start gap-2 w-full mt-5'>
+            <div className="flex flex-col items-stretch gap-4 w-full">
+                <div className='flex flex-col items-stretch gap-2 w-full mt-5'>
 
                     <SmallText value='Moustache Style' textColor='text-sky-500' className='text-left text-sm font-bold w-full' />
-                    <div className='flex flex-col items-start justify-center gap-2 bg-gray-100/50 p-1.5 rounded-xl w-full'>
+                    <div className='grid grid-cols-2 gap-2 bg-gray-100/50 p-1.5 rounded-xl w-full'>
                         <button
-                            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all duration-300 ${beardLength === "no moustache" ? 'bg-primaryColor text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                            className={`py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${beardLength === "no moustache" ? 'bg-primaryColor text-white shadow-md' : 'text-gray-500 bg-grayColor/15'
                                 }`}
                             onClick={() => setBeardLength("no moustache")}
                         >
@@ -37,7 +36,7 @@ export default function Beared_fields({
                         </button>
 
                         <button
-                            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all duration-300 ${beardLength === "light moustache" ? 'bg-primaryColor text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                            className={`py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${beardLength === "light moustache" ? 'bg-primaryColor text-white shadow-md' : 'text-gray-500 bg-grayColor/15'
                                 }`}
                             onClick={() => setBeardLength("light moustache")}
                         >
@@ -45,14 +44,12 @@ export default function Beared_fields({
                         </button>
 
                         <button
-                            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all duration-300 ${beardLength === "thick & dominant" ? 'bg-primaryColor text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                            className={`py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${beardLength === "thick & dominant" ? 'bg-primaryColor text-white shadow-md' : 'text-gray-500 bg-grayColor/15'
                                 }`}
                             onClick={() => setBeardLength("thick & dominant")}
                         >
                             Thick
                         </button>
-
-
                     </div>
                 </div>
 

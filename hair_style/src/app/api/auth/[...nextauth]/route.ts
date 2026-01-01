@@ -7,7 +7,15 @@ import dbConnect from "@/lib/mongodb"
 import User from "../../../../../model/user"
 import bcrypt from "bcryptjs"
 
+console.log("NextAuth Environment Check:", {
+    HAS_GOOGLE_ID: !!process.env.GOOGLE_CLIENT_ID,
+    HAS_GOOGLE_SECRET: !!process.env.GOOGLE_CLIENT_SECRET,
+    HAS_NEXTAUTH_SECRET: !!process.env.NEXTAUTH_SECRET,
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL
+});
+
 const handler = NextAuth({
+    debug: true,
     adapter: MongoDBAdapter(clientPromise),
     providers: [
         GoogleProvider({
@@ -22,21 +30,27 @@ const handler = NextAuth({
                 password: { label: "Password", type: "password" }
             },
             async authorize(credentials) {
+                console.log("Authorize callback initiated for:", credentials?.email);
                 if (!credentials?.email || !credentials?.password) {
+                    console.log("Missing email or password");
                     return null
                 }
 
                 await dbConnect()
 
                 const user = await User.findOne({ email: credentials.email })
+                console.log("User found in DB:", !!user);
 
                 if (!user) {
+                    console.log("No user found with this email");
                     return null
                 }
 
                 const isPasswordMatch = await bcrypt.compare(credentials.password, user.password)
+                console.log("Password match:", isPasswordMatch);
 
                 if (!isPasswordMatch) {
+                    console.log("Password mismatch");
                     return null
                 }
 
@@ -56,23 +70,33 @@ const handler = NextAuth({
         signIn: "/sign_in",
     },
     callbacks: {
+        async jwt({ token, user, account }) {
+            console.log("JWT Callback - Provider:", account?.provider);
+            if (user) {
+                token.id = user.id;
+                token.email = user.email;
+                token.name = user.name;
+                console.log("JWT Callback - User data captured:", { id: user.id, email: user.email });
+            }
+            return token;
+        },
         async session({ session, token }) {
-            if (session.user && token.sub) {
-                // Fetch the latest user data to get current credits
+            console.log("Session Callback - Token Email:", token.email);
+            if (session.user) {
                 await dbConnect();
 
-                // If we have an email, we can find by email which is safer or by id
-                // token.sub is the providerAccountId or user id depending on flow
-                // For safety, let's use the email from token if available
                 const userData = await User.findOne({ email: token.email });
-
-                session.user.name = token.name;
-                session.user.email = token.email;
-                session.user.image = token.picture;
+                console.log("Session Callback - User in DB found:", !!userData);
 
                 if (userData) {
-                    session.user.credits = userData.credits;
+                    session.user.name = userData.name;
+                    session.user.email = userData.email;
                     session.user.id = userData._id.toString();
+                    session.user.credits = userData.credits;
+                } else {
+                    // Fallback for new Google users if they aren't in our User model yet
+                    // though MongoDBAdapter should have created them.
+                    session.user.id = token.id as string;
                 }
             }
             return session

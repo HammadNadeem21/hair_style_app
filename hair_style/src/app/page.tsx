@@ -14,10 +14,10 @@ export default function Home() {
       <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-primaryColor/20 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-blue-400/20 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="z-10 w-full max-w-md flex flex-col items-center gap-8 animate-fadeIn">
+      <div className="z-10 w-full max-w-md flex flex-col items-center gap-5 animate-fadeIn">
 
         {/* Header / Logo Area */}
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-2 mt-7">
           <h1 className="text-4xl font-bold text-primaryColor tracking-tight">HairStyle AI</h1>
           <p className="text-gray-500 text-sm">Discover your perfect look instantly</p>
         </div>

@@ -269,12 +269,12 @@ const Option = () => {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-start gap-6 w-full animate-fadeIn">
+        <div className="flex flex-col items-stretch justify-start gap-6 w-full animate-fadeIn">
 
           {/* Image Preview */}
-          <div className="relative w-full max-w-[280px] aspect-[3/4] rounded-2xl overflow-hidden shadow-lg border border-white/50">
+          <div className="relative w-full max-w-[280px] aspect-[3/4] rounded-2xl overflow-hidden shadow-lg border border-white/50 self-center">
             <Image
-              src={preview}
+              src={preview as string}
               alt="preview"
               fill
               className="object-cover"
@@ -294,7 +294,7 @@ const Option = () => {
           </div>
 
           {/* Controls */}
-          <div className="flex flex-col items-start justify-center gap-4 w-full">
+          <div className="flex flex-col items-stretch justify-center gap-4 w-full">
 
             <div className="flex items-center justify-center gap-4 w-full">
               <button
@@ -370,7 +370,7 @@ const Option = () => {
               onClick={() => file && handleUpload()}
               disabled={!file || loading}
               loading={loading}
-              className="w-full max-w-[280px] py-4 text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+              className="w-full max-w-[280px] py-4 text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all self-center"
             />
           )}
 

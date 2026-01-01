@@ -1,6 +1,6 @@
 
 "use client";
-import React from 'react'
+import React, { useEffect } from 'react'
 import ResultCard from '@/components/ResultCard'
 import { Heading_2 } from '@/components/Text_Style/Heading_2'
 import { Sparkles } from 'lucide-react'
@@ -15,6 +15,42 @@ const Page = () => {
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
   const router = useRouter();
+
+  // Fix 1: Remove /Scan from browser history on mount
+  // This ensures back button goes to home (/) instead of /Scan
+  useEffect(() => {
+    // Replace current history entry to skip /Scan in the navigation stack
+    window.history.replaceState(
+      { ...window.history.state, as: '/result', url: '/result' },
+      '',
+      '/result'
+    );
+  }, []);
+
+  // Fix 2: Handle lightbox navigation with browser back button
+  // When lightbox is open, back button should close it without navigating
+  useEffect(() => {
+    if (lightboxImage) {
+      // Push a new history state when lightbox opens
+      const historyState = { lightboxOpen: true };
+      window.history.pushState(historyState, '');
+
+      const handlePopState = (event: PopStateEvent) => {
+        // When back button is pressed, close the lightbox
+        setLightboxImage(null);
+        // Prevent going back to previous page by pushing forward again
+        window.history.pushState({ lightboxOpen: false }, '');
+      };
+
+      // Listen for back button presses
+      window.addEventListener('popstate', handlePopState);
+
+      // Cleanup: remove listener when lightbox closes or component unmounts
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [lightboxImage]);
 
   const handleImageClick = (image: string) => {
     setLightboxImage(image);

@@ -345,7 +345,7 @@ const Option = () => {
           {/* Controls */}
           <div className="flex flex-col items-stretch justify-center gap-4 w-full">
 
-            <div className="flex items-center justify-center gap-4 w-full">
+            {/* <div className="flex items-center justify-center gap-4 w-full">
 
               <button
                 onClick={() => toggleOption("hair")}
@@ -354,7 +354,7 @@ const Option = () => {
                   : 'bg-white text-gray-500 border-gray-300'
                   }`}
               >
-                Hair
+                Haired
               </button>
               <button
                 onClick={() => toggleOption("beared")}
@@ -363,11 +363,11 @@ const Option = () => {
                   : 'bg-white text-gray-500 border-gray-300'
                   }`}
               >
-                Beard
+                Bearded
               </button>
 
 
-            </div>
+            </div> */}
             <MyButton value={"Glow Up Coaching With AI"}
               className="w-full max-w-[280px] py-4 text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all self-center"
               onClick={handleGlowUp}

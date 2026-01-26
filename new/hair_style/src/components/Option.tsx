@@ -58,6 +58,8 @@ const Option = () => {
     }));
   };
 
+  console.log(toggleOption);
+
   // Check if at least one option is selected
   const hasSelectedOption = selectedOptions.hair || selectedOptions.beared;
 

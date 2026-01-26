@@ -4,12 +4,12 @@ import React from "react";
 import { useImageContext } from "@/context/ImageContext";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Sparkles, Target, Zap, Waves, Eye, Scissors, Heart, Quote } from "lucide-react";
+import { ArrowLeft, Sparkles, Target, Zap, Waves, Scissors, Heart, Quote, LucideIcon } from "lucide-react";
 import { Heading_2 } from "@/components/Text_Style/Heading_2";
 
 import { Progress } from "@/components/ui/progress";
 
-const ScoreBadge = ({ label, score, icon: Icon, color }: { label: string; score: number; icon: any; color: string }) => (
+const ScoreBadge = ({ label, score, icon: Icon, color }: { label: string; score: number; icon: LucideIcon; color: string }) => (
     <div className={`flex flex-col items-center p-4 rounded-2xl bg-white/40 backdrop-blur-md border border-white/50 shadow-sm transition-all hover:shadow-md ${color}`}>
         <div className="flex items-center gap-2 mb-2">
             <Icon size={20} className="text-gray-700" />
@@ -29,7 +29,7 @@ const FeatureBar = ({ label, score }: { label: string; score: number }) => (
     </div>
 );
 
-const TipCard = ({ title, tips, icon: Icon }: { title: string; tips: string[]; icon: any }) => (
+const TipCard = ({ title, tips, icon: Icon }: { title: string; tips: string[]; icon: LucideIcon }) => (
     <div className="bg-white/40 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
         <div className="flex items-center gap-2 mb-4">
             <div className="p-2 rounded-lg bg-primaryColor/10 text-primaryColor">

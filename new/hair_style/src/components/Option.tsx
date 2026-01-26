@@ -236,11 +236,11 @@ const Option = () => {
     formData.append("image", file);
 
     try {
-      if (!session?.user?.email) {
-        alert("Please login to generate images!");
-        setLoading(false);
-        return;
-      }
+      // if (!session?.user?.email) {
+      //   alert("Please login to generate images!");
+      //   setLoading(false);
+      //   return;
+      // }
 
       const res = await fetch("/api/glow", {
         method: "POST",

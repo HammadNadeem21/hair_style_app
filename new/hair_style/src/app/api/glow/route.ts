@@ -1,3 +1,4 @@
+// @ts-ignore
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { Agent, Runner, OpenAIChatCompletionsModel } from "@openai/agents";

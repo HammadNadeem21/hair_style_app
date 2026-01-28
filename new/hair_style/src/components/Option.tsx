@@ -249,6 +249,28 @@ const Option = () => {
         body: formData,
       });
 
+      // Check if response is OK before parsing
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Glow API error response:", text);
+        try {
+          const errorData = JSON.parse(text);
+          alert(errorData.error || `Server error: ${res.status}`);
+        } catch {
+          alert(`Server error: ${res.status} ${res.statusText}`);
+        }
+        return;
+      }
+
+      // Verify content-type is JSON
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("Non-JSON response:", text);
+        alert("Server returned an invalid response. Please try again.");
+        return;
+      }
+
       const data = await res.json();
       console.log("AI Response", data);
 

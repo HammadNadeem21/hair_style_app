@@ -5,6 +5,9 @@ import { z } from "zod";
 
 const api_key = process.env.GEMINI_API_KEY;
 
+// Increase timeout for Vercel to allow AI processing time
+export const maxDuration = 60;
+
 const AgentOutputSchema = z.object({
     overallScore: z.number().min(0).max(100),
     potentialScore: z.number().min(0).max(100),
@@ -32,41 +35,41 @@ const AgentOutputSchema = z.object({
 
 
 export async function POST(req: Request) {
+    try {
+        const formData = await req.formData();
+        const file = formData.get("image") as File;
 
-    const formData = await req.formData();
-    const file = formData.get("image") as File;
+        if (!file) {
+            return NextResponse.json(
+                { error: "Image is required" },
+                { status: 400 }
+            );
+        }
 
-    if (!file) {
-        return NextResponse.json(
-            { error: "Image is required" },
-            { status: 400 }
-        );
-    }
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        const base64Image = `data:${file.type};base64,${buffer.toString("base64")}`;
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const base64Image = `data:${file.type};base64,${buffer.toString("base64")}`;
+        if (!api_key) {
+            return NextResponse.json(
+                { error: "API key is required" },
+                { status: 500 }
+            );
+        }
 
-    if (!api_key) {
-        return NextResponse.json(
-            { error: "API key is required" },
-            { status: 500 }
-        );
-    }
+        const openai = new OpenAI({
+            apiKey: api_key,
+            baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+        })
 
-    const openai = new OpenAI({
-        apiKey: api_key,
-        baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
-    })
-
-    const model = new OpenAIChatCompletionsModel(
-        openai,
-        "models/gemini-flash-latest"
-    )
-    const agent = new Agent({
-        name: "Beauty_Facial_Analysis_Agent",
-        model: model,
-        instructions: `You are a visual appearance and grooming analysis agent inspired by "looksmaxxing" applications.
+        const model = new OpenAIChatCompletionsModel(
+            openai,
+            "models/gemini-flash-latest"
+        )
+        const agent = new Agent({
+            name: "Beauty_Facial_Analysis_Agent",
+            model: model,
+            instructions: `You are a visual appearance and grooming analysis agent inspired by "looksmaxxing" applications.
 
 Your role is to analyze the user's uploaded image and provide a **presentation-based appearance evaluation**, not a medical or psychological assessment.
 
@@ -91,21 +94,30 @@ Your analysis should include:
 7. A short disclaimer clarifying limitations of AI-based visual analysis
 
 Output must strictly follow the provided JSON schema.`,
-        outputType: AgentOutputSchema,
-    })
+            outputType: AgentOutputSchema,
+        })
 
-    const runner = new Runner(agent);
-    const result = await runner.run(agent, `Analyze the uploaded user image below for visual appearance and grooming presentation.
+        const runner = new Runner(agent);
+        const result = await runner.run(agent, `Analyze the uploaded user image below for visual appearance and grooming presentation.
 Focus on improvable, non-medical factors only.
 
 Image: ${base64Image}`)
 
-    console.log(result)
+        console.log(result)
 
-    return NextResponse.json({
-        success: true,
-        message: "Image uploaded successfully",
-
-        result: result.finalOutput,
-    });
+        return NextResponse.json({
+            success: true,
+            message: "Image uploaded successfully",
+            result: result.finalOutput,
+        });
+    } catch (error: any) {
+        console.error("Glow API Error:", error);
+        return NextResponse.json(
+            {
+                success: false,
+                error: error.message || "Failed to process image. Please try again."
+            },
+            { status: 500 }
+        );
+    }
 }

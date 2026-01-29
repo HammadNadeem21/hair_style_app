@@ -32,6 +32,60 @@ const HAIR_COLORS = [
   { hex: "#FAEBD7", name: "White" },
 ];
 
+// Helper function to compress image before upload
+// This is CRITICAL for mobile uploads to prevent 400 Bad Request errors
+const compressImage = (file: File, maxWidth = 1024, quality = 0.8): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // Calculate new dimensions while maintaining aspect ratio
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Failed to get canvas context'));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject(new Error('Failed to compress image'));
+              return;
+            }
+            const compressedFile = new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            });
+            console.log(`Compressed: ${(file.size / 1024).toFixed(2)}KB → ${(compressedFile.size / 1024).toFixed(2)}KB`);
+            resolve(compressedFile);
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+};
+
 const Option = () => {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -225,19 +279,23 @@ const Option = () => {
     }
     setLoading(true);
 
-    // Save image to Context for Result page
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        setScanImage(e.target.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
-
-    const formData = new FormData();
-    formData.append("image", file);
-
     try {
+      // Compress image before uploading (CRITICAL for mobile)
+      console.log(`Original file size: ${(file.size / 1024).toFixed(2)}KB`);
+      const compressedFile = await compressImage(file, 1024, 0.8);
+
+      // Save compressed image to Context for Result page
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setScanImage(e.target.result as string);
+        }
+      };
+      reader.readAsDataURL(compressedFile);
+
+      const formData = new FormData();
+      formData.append("image", compressedFile);
+
       // if (!session?.user?.email) {
       //   alert("Please login to generate images!");
       //   setLoading(false);
@@ -257,6 +315,12 @@ const Option = () => {
         // Handle rate limit specifically
         if (res.status === 429) {
           alert("⏱️ Too many requests! Please wait 30 seconds and try again.");
+          return;
+        }
+
+        // Handle bad request (usually image too large)
+        if (res.status === 400) {
+          alert("❌ Image processing failed. Try taking a new photo or using a smaller image.");
           return;
         }
 

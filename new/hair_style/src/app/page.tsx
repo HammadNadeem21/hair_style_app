@@ -18,8 +18,8 @@ export default function Home() {
 
         {/* Header / Logo Area */}
         <div className="text-center space-y-2 mt-7">
-          <h1 className="text-4xl font-bold text-primaryColor tracking-tight">HairStyle AI</h1>
-          <p className="text-gray-500 text-sm">Discover your perfect look instantly</p>
+          <h1 className="text-4xl font-bold text-primaryColor tracking-tight">Ai Facial Analysis</h1>
+          {/* <p className="text-gray-500 text-sm">Discover your perfect look instantly</p> */}
         </div>
 
         <div className="w-full bg-white/60 backdrop-blur-xl border border-white/50 shadow-xl rounded-3xl p-6">

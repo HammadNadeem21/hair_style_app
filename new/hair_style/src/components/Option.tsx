@@ -253,6 +253,13 @@ const Option = () => {
       if (!res.ok) {
         const text = await res.text();
         console.error("Glow API error response:", text);
+
+        // Handle rate limit specifically
+        if (res.status === 429) {
+          alert("⏱️ Too many requests! Please wait 30 seconds and try again.");
+          return;
+        }
+
         try {
           const errorData = JSON.parse(text);
           alert(errorData.error || `Server error: ${res.status}`);

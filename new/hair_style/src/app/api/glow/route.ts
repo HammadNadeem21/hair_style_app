@@ -10,6 +10,32 @@ const api_key = process.env.GEMINI_API_KEY;
 // Increase timeout for Vercel to allow AI processing time
 export const maxDuration = 60;
 
+// Helper function to retry with exponential backoff
+async function retryWithBackoff<T>(
+    fn: () => Promise<T>,
+    maxRetries = 3,
+    initialDelay = 1000
+): Promise<T> {
+    let lastError: any;
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            return await fn();
+        } catch (error: any) {
+            lastError = error;
+            // Check if it's a rate limit error
+            if (error.status === 429 || error.message?.includes('429')) {
+                const delay = initialDelay * Math.pow(2, i);
+                console.log(`Rate limited, retrying in ${delay}ms (attempt ${i + 1}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                continue;
+            }
+            // If not a rate limit error, throw immediately
+            throw error;
+        }
+    }
+    throw lastError;
+}
+
 const AgentOutputSchema = z.object({
     overallScore: z.number().min(0).max(100),
     potentialScore: z.number().min(0).max(100),
@@ -100,10 +126,14 @@ Output must strictly follow the provided JSON schema.`,
         })
 
         const runner = new Runner(agent);
-        const result = await runner.run(agent, `Analyze the uploaded user image below for visual appearance and grooming presentation.
+
+        // Retry the AI call with exponential backoff for rate limits
+        const result = await retryWithBackoff(async () => {
+            return await runner.run(agent, `Analyze the uploaded user image below for visual appearance and grooming presentation.
 Focus on improvable, non-medical factors only.
 
-Image: ${base64Image}`)
+Image: ${base64Image}`);
+        });
 
         console.log(result)
 

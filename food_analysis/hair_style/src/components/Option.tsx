@@ -13,24 +13,24 @@ import Image from "next/image";
 import { MyButton } from "./Button";
 import { useRouter } from "next/navigation";
 import { useImageContext } from "@/context/ImageContext";
-import { useCreditContext } from "@/context/CreditContext";
-import { calculateCredits } from "@/../helper_function/calculate_credits";
-import { useSession } from "next-auth/react";
+// import { useCreditContext } from "@/context/CreditContext";
+// import { calculateCredits } from "@/../helper_function/calculate_credits";
+// import { useSession } from "next-auth/react";
 
 
 
 
-const HAIR_COLORS = [
-  { hex: "#090806", name: "Black" },
-  { hex: "#3B3024", name: "Dark Brown" },
-  { hex: "#4E433F", name: "Medium Brown" },
-  { hex: "#A7856A", name: "Light Brown" },
-  { hex: "#B7A69E", name: "Gray" },
-  { hex: "#D6C4C2", name: "Platinum" },
-  { hex: "#DEBC99", name: "Blonde" },
-  { hex: "#8D4A43", name: "Red/Auburn" },
-  { hex: "#FAEBD7", name: "White" },
-];
+// const HAIR_COLORS = [
+//   { hex: "#090806", name: "Black" },
+//   { hex: "#3B3024", name: "Dark Brown" },
+//   { hex: "#4E433F", name: "Medium Brown" },
+//   { hex: "#A7856A", name: "Light Brown" },
+//   { hex: "#B7A69E", name: "Gray" },
+//   { hex: "#D6C4C2", name: "Platinum" },
+//   { hex: "#DEBC99", name: "Blonde" },
+//   { hex: "#8D4A43", name: "Red/Auburn" },
+//   { hex: "#FAEBD7", name: "White" },
+// ];
 
 // Helper function to compress image before upload
 // This is CRITICAL for mobile uploads to prevent 400 Bad Request errors
@@ -97,9 +97,9 @@ const Option = () => {
 
 
   const router = useRouter()
-  const { setScanImage, setResultImages, setFoodResult } = useImageContext();
-  const { setCredits } = useCreditContext();
-  const { data: session } = useSession();
+  const { setScanImage, setFoodResult } = useImageContext();
+  // const { setCredits } = useCreditContext();
+  // const { data: session } = useSession();
 
 
 

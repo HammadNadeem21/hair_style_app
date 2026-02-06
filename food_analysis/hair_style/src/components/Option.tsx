@@ -16,8 +16,7 @@ import { useImageContext } from "@/context/ImageContext";
 import { useCreditContext } from "@/context/CreditContext";
 import { calculateCredits } from "@/../helper_function/calculate_credits";
 import { useSession } from "next-auth/react";
-import Hair_fields from "./Fields/Hair_fields";
-import Beared_fields from "./Fields/Beared_fields";
+
 
 
 
@@ -90,37 +89,15 @@ const compressImage = (file: File, maxWidth = 1024, quality = 0.8): Promise<File
 const Option = () => {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [hairLength, setHairLength] = useState<"long" | "short" | null>(null);
-  const [hairStyle, setHairStyle] = useState<Array<"asian" | "western">>([]);
 
-  const [color, setColor] = useState("#090806"); // Default to Black
-  // const [open, setOpen] = useState(false);
-  // const pickerRef = useRef<HTMLDivElement>(null);
+
+
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
-  const [beardLength, setBeardLength] = useState<"no moustache" | "light moustache" | "thick & dominant" | null>(null);
-  // const [selectedOptions, setSelectedOptions] = useState<{ hair: boolean; beared: boolean }>({
-  //   hair: false,
-  //   beared: false
-  // });
-  const [beardCoverage, setBeardCoverage] = useState<Array<"full" | "Patchy cheeks" | "Weak moustache">>([]);
-
-  // Toggle function for selecting options
-  // const toggleOption = (option: "hair" | "beared") => {
-  //   setSelectedOptions(prev => ({
-  //     ...prev,
-  //     [option]: !prev[option]
-  //   }));
-  // };
-
-
-
-  // Check if at least one option is selected
-  // const hasSelectedOption = selectedOptions.hair || selectedOptions.beared;
 
 
   const router = useRouter()
-  const { setScanImage, setResultImages, setGlowResult, setFoodResult } = useImageContext();
+  const { setScanImage, setResultImages, setFoodResult } = useImageContext();
   const { setCredits } = useCreditContext();
   const { data: session } = useSession();
 
@@ -162,206 +139,6 @@ const Option = () => {
 
 
 
-  const handleUpload = async () => {
-    if (!file) return alert("Please upload a selfie first!");
-
-    // const isHairValid = selectedOptions.hair && (hairLength || hairStyle.length > 0);
-    // const isBeardValid = selectedOptions.beared && (beardLength || beardCoverage.length > 0);
-
-    // if (!isHairValid && !isBeardValid) {
-    //   return alert("Please select valid options for either Hair or Beard!");
-    // }
-
-    setLoading(true);
-
-    // Save image to Context for Scan page
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        setScanImage(e.target.result as string);
-        router.push("/Scan");
-      }
-    };
-    reader.readAsDataURL(file);
-
-    // Create FormData to send the file safely
-    const formData = new FormData();
-    formData.append("image", file);
-    formData.append("hair_length", hairLength || "");
-    formData.append("hair_style", hairStyle.join(", "));
-    formData.append("hair_color", color);
-
-    // Find color name
-    const selectedColorObj = HAIR_COLORS.find(c => c.hex === color);
-    formData.append("hair_color_name", selectedColorObj ? selectedColorObj.name : "Natural");
-
-    formData.append("beard_length", beardLength || "");
-    formData.append("beard_coverage", beardCoverage.join(", "));
-    // formData.append("is_hair_selected", String(selectedOptions.hair));
-    // formData.append("is_beard_selected", String(selectedOptions.beared));
-
-    try {
-      // Check if user is logged in
-      if (!session?.user?.email) {
-        alert("Please log in to generate hairstyles");
-        setLoading(false);
-        return;
-      }
-
-      // router.push("/Scan"); // Moved inside reader.onload
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      console.log("response", data.results);
-      console.log("totalTokens", data.totalTokens);
-
-      if (data.results && Array.isArray(data.results)) {
-        // Calculate credits used
-        let creditsUsed = 0;
-        if (data.totalTokens) {
-          creditsUsed = calculateCredits(data.totalTokens);
-          console.log("Credits to deduct:", creditsUsed);
-        }
-
-        // Deduct credits from database
-        if (creditsUsed > 0) {
-          const deductRes = await fetch("/api/credits/deduct", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: session.user.email,
-              creditsToDeduct: creditsUsed
-            })
-          });
-
-          const deductData = await deductRes.json();
-
-          if (!deductRes.ok) {
-            alert(deductData.error || "Failed to deduct credits");
-            setLoading(false);
-            // Redirect back to home if credit deduction fails
-            router.push("/");
-            return;
-          }
-
-          // Update credit context with remaining credits
-          setCredits(deductData.remainingCredits);
-          console.log("Remaining credits:", deductData.remainingCredits);
-        }
-
-        // Save results in Context
-        setResultImages(data.results);
-
-        // 3. Navigate to result page
-        router.push("/result");
-      } else {
-        console.error("API Error:", data);
-        alert(data.error || "Failed to generate images. Please try again.");
-        // Redirect back to home if generation fails
-        router.push("/");
-      }
-    } catch (e: any) {
-      console.error("Fetch Error:", e);
-      alert(`Error generating images: ${e.message}`);
-      // Redirect back to home if there's an exception
-      router.push("/");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-  // const handleGlowUp = async () => {
-  //   if (!file) {
-  //     return alert("Please upload a selfie first!");
-  //   }
-  //   setLoading(true);
-
-  //   try {
-  //     // Compress image before uploading (CRITICAL for mobile)
-  //     console.log(`Original file size: ${(file.size / 1024).toFixed(2)}KB`);
-  //     // Increased quality and resolution for better AI analysis
-  //     const compressedFile = await compressImage(file, 1920, 0.95);
-
-  //     // Save compressed image to Context for Result page
-  //     const reader = new FileReader();
-  //     reader.onload = (e) => {
-  //       if (e.target?.result) {
-  //         setScanImage(e.target.result as string);
-  //       }
-  //     };
-  //     reader.readAsDataURL(compressedFile);
-
-  //     const formData = new FormData();
-  //     formData.append("image", compressedFile);
-
-  //     // if (!session?.user?.email) {
-  //     //   alert("Please login to generate images!");
-  //     //   setLoading(false);
-  //     //   return;
-  //     // }
-
-  //     const res = await fetch("/api/glow", {
-  //       method: "POST",
-  //       body: formData,
-  //     });
-
-  //     // Check if response is OK before parsing
-  //     if (!res.ok) {
-  //       const text = await res.text();
-  //       console.error("Glow API error response:", text);
-
-  //       // Handle rate limit specifically
-  //       if (res.status === 429) {
-  //         alert("⏱️ Too many requests! Please wait 30 seconds and try again.");
-  //         return;
-  //       }
-
-  //       // Handle bad request (usually image too large)
-  //       if (res.status === 400) {
-  //         alert("❌ Image processing failed. Try taking a new photo or using a smaller image.");
-  //         return;
-  //       }
-
-  //       try {
-  //         const errorData = JSON.parse(text);
-  //         alert(errorData.error || `Server error: ${res.status}`);
-  //       } catch {
-  //         alert(`Server error: ${res.status} ${res.statusText}`);
-  //       }
-  //       return;
-  //     }
-
-  //     // Verify content-type is JSON
-  //     const contentType = res.headers.get("content-type");
-  //     if (!contentType || !contentType.includes("application/json")) {
-  //       const text = await res.text();
-  //       console.error("Non-JSON response:", text);
-  //       alert("Server returned an invalid response. Please try again.");
-  //       return;
-  //     }
-
-  //     const data = await res.json();
-  //     console.log("AI Response", data);
-
-  //     if (data.success && data.result) {
-  //       setGlowResult(data.result);
-  //       router.push("/glow-result");
-  //     } else {
-  //       alert(data.error || "Failed to analyze image. Please try again.");
-  //     }
-
-  //   } catch (e: any) {
-  //     console.error("Fetch Error:", e);
-  //     alert(`Error generating images: ${e.message}`);
-  //     router.push("/");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   const handleFoodAnalysis = async () => {
     if (!file) {

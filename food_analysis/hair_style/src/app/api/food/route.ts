@@ -87,8 +87,8 @@ Be accurate and realistic with your estimates. If unsure about the portion size,
         let analysisResult;
         try {
             analysisResult = JSON.parse(text);
-        } catch (parseError) {
-            console.error("Failed to parse AI response:", text);
+        } catch (error: any) {
+            console.error("Failed to parse AI response:", text, error);
             return NextResponse.json(
                 { success: false, error: "Invalid AI response format" },
                 { status: 500 }

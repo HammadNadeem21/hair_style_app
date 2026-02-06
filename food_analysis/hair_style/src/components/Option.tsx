@@ -18,11 +18,8 @@ import { calculateCredits } from "@/../helper_function/calculate_credits";
 import { useSession } from "next-auth/react";
 import Hair_fields from "./Fields/Hair_fields";
 import Beared_fields from "./Fields/Beared_fields";
-import NewForm from "./NewForm";
-import { RadioCardGroup, RadioOption } from "./RadioGroup";
-import { ChartBar } from "./Chart";
+import { RadioOption } from "./RadioGroup";
 import { ChartConfig } from "./ui/chart";
-import { text } from "stream/consumers";
 
 
 const HAIR_COLORS = [
@@ -110,12 +107,12 @@ const Option = () => {
   const [beardCoverage, setBeardCoverage] = useState<Array<"full" | "Patchy cheeks" | "Weak moustache">>([]);
 
   // Toggle function for selecting options
-  const toggleOption = (option: "hair" | "beared") => {
-    setSelectedOptions(prev => ({
-      ...prev,
-      [option]: !prev[option]
-    }));
-  };
+  // const toggleOption = (option: "hair" | "beared") => {
+  //   setSelectedOptions(prev => ({
+  //     ...prev,
+  //     [option]: !prev[option]
+  //   }));
+  // };
 
 
 
@@ -278,94 +275,94 @@ const Option = () => {
   };
 
 
-  const handleGlowUp = async () => {
-    if (!file) {
-      return alert("Please upload a selfie first!");
-    }
-    setLoading(true);
+  // const handleGlowUp = async () => {
+  //   if (!file) {
+  //     return alert("Please upload a selfie first!");
+  //   }
+  //   setLoading(true);
 
-    try {
-      // Compress image before uploading (CRITICAL for mobile)
-      console.log(`Original file size: ${(file.size / 1024).toFixed(2)}KB`);
-      // Increased quality and resolution for better AI analysis
-      const compressedFile = await compressImage(file, 1920, 0.95);
+  //   try {
+  //     // Compress image before uploading (CRITICAL for mobile)
+  //     console.log(`Original file size: ${(file.size / 1024).toFixed(2)}KB`);
+  //     // Increased quality and resolution for better AI analysis
+  //     const compressedFile = await compressImage(file, 1920, 0.95);
 
-      // Save compressed image to Context for Result page
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          setScanImage(e.target.result as string);
-        }
-      };
-      reader.readAsDataURL(compressedFile);
+  //     // Save compressed image to Context for Result page
+  //     const reader = new FileReader();
+  //     reader.onload = (e) => {
+  //       if (e.target?.result) {
+  //         setScanImage(e.target.result as string);
+  //       }
+  //     };
+  //     reader.readAsDataURL(compressedFile);
 
-      const formData = new FormData();
-      formData.append("image", compressedFile);
+  //     const formData = new FormData();
+  //     formData.append("image", compressedFile);
 
-      // if (!session?.user?.email) {
-      //   alert("Please login to generate images!");
-      //   setLoading(false);
-      //   return;
-      // }
+  //     // if (!session?.user?.email) {
+  //     //   alert("Please login to generate images!");
+  //     //   setLoading(false);
+  //     //   return;
+  //     // }
 
-      const res = await fetch("/api/glow", {
-        method: "POST",
-        body: formData,
-      });
+  //     const res = await fetch("/api/glow", {
+  //       method: "POST",
+  //       body: formData,
+  //     });
 
-      // Check if response is OK before parsing
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("Glow API error response:", text);
+  //     // Check if response is OK before parsing
+  //     if (!res.ok) {
+  //       const text = await res.text();
+  //       console.error("Glow API error response:", text);
 
-        // Handle rate limit specifically
-        if (res.status === 429) {
-          alert("⏱️ Too many requests! Please wait 30 seconds and try again.");
-          return;
-        }
+  //       // Handle rate limit specifically
+  //       if (res.status === 429) {
+  //         alert("⏱️ Too many requests! Please wait 30 seconds and try again.");
+  //         return;
+  //       }
 
-        // Handle bad request (usually image too large)
-        if (res.status === 400) {
-          alert("❌ Image processing failed. Try taking a new photo or using a smaller image.");
-          return;
-        }
+  //       // Handle bad request (usually image too large)
+  //       if (res.status === 400) {
+  //         alert("❌ Image processing failed. Try taking a new photo or using a smaller image.");
+  //         return;
+  //       }
 
-        try {
-          const errorData = JSON.parse(text);
-          alert(errorData.error || `Server error: ${res.status}`);
-        } catch {
-          alert(`Server error: ${res.status} ${res.statusText}`);
-        }
-        return;
-      }
+  //       try {
+  //         const errorData = JSON.parse(text);
+  //         alert(errorData.error || `Server error: ${res.status}`);
+  //       } catch {
+  //         alert(`Server error: ${res.status} ${res.statusText}`);
+  //       }
+  //       return;
+  //     }
 
-      // Verify content-type is JSON
-      const contentType = res.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        const text = await res.text();
-        console.error("Non-JSON response:", text);
-        alert("Server returned an invalid response. Please try again.");
-        return;
-      }
+  //     // Verify content-type is JSON
+  //     const contentType = res.headers.get("content-type");
+  //     if (!contentType || !contentType.includes("application/json")) {
+  //       const text = await res.text();
+  //       console.error("Non-JSON response:", text);
+  //       alert("Server returned an invalid response. Please try again.");
+  //       return;
+  //     }
 
-      const data = await res.json();
-      console.log("AI Response", data);
+  //     const data = await res.json();
+  //     console.log("AI Response", data);
 
-      if (data.success && data.result) {
-        setGlowResult(data.result);
-        router.push("/glow-result");
-      } else {
-        alert(data.error || "Failed to analyze image. Please try again.");
-      }
+  //     if (data.success && data.result) {
+  //       setGlowResult(data.result);
+  //       router.push("/glow-result");
+  //     } else {
+  //       alert(data.error || "Failed to analyze image. Please try again.");
+  //     }
 
-    } catch (e: any) {
-      console.error("Fetch Error:", e);
-      alert(`Error generating images: ${e.message}`);
-      router.push("/");
-    } finally {
-      setLoading(false);
-    }
-  };
+  //   } catch (e: any) {
+  //     console.error("Fetch Error:", e);
+  //     alert(`Error generating images: ${e.message}`);
+  //     router.push("/");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleFoodAnalysis = async () => {
     if (!file) {
@@ -496,44 +493,13 @@ const Option = () => {
 
 
 
-  const [gender, setGender] = useState("");
-
-  const options: RadioOption[] = [
-    { value: "Male", label: "Male", id: "male" },
-    { value: "Female", label: "Female", id: "female" },
-    { value: "Other", label: "Other", id: "other" },
-  ];
+  // const [gender, setGender] = useState("");
 
 
-  const chartData = [
-    { month: "January", male: 186, female: 80, other: 80 },
-    { month: "February", male: 305, female: 200, other: 200 },
-    { month: "March", male: 237, female: 120, other: 120 },
-    { month: "April", male: 73, female: 190, other: 190 },
-    { month: "May", male: 209, female: 130, other: 130 },
-    { month: "June", male: 214, female: 140, other: 140 },
-    { month: "July", male: 224, female: 150, other: 150 },
-    { month: "August", male: 234, female: 160, other: 160 },
-    { month: "September", male: 244, female: 170, other: 170 },
-    { month: "October", male: 254, female: 180, other: 180 },
-    { month: "November", male: 264, female: 190, other: 190 },
-    { month: "December", male: 274, female: 200, other: 200 },
-  ];
 
-  const chartConfig = {
-    male: {
-      label: "Male",
-      color: "#2563eb",
-    },
-    female: {
-      label: "Female",
-      color: "#60a5fa",
-    },
-    other: {
-      label: "Other",
-      color: "#4ade80",
-    },
-  } satisfies ChartConfig;
+
+
+
 
   return (
     <div className="w-full">

@@ -78,7 +78,7 @@ export default function GlowResultPage() {
                     </div>
                     <h2 className="text-2xl font-bold mb-3 text-red-400">No Face Detected</h2>
                     <p className="text-gray-400 mb-8 leading-relaxed">
-                        We couldn't detect a clear human face in your photo.
+                        We couldn&apos;t detect a clear human face in your photo.
                         Please upload a clear selfie with good lighting for the best analysis.
                     </p>
                     <button

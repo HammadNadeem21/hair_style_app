@@ -69,7 +69,7 @@ export default function FoodResultPage() {
                     </div>
                     <h2 className="text-2xl font-bold mb-3 text-red-600">No Food Detected</h2>
                     <p className="text-gray-500 mb-8 leading-relaxed">
-                        We couldn't definitely identify food in your picture.
+                        We couldn&apos;t definitely identify food in your picture.
                         Please try again with a clearer photo.
                     </p>
                     <button
@@ -208,7 +208,7 @@ export default function FoodResultPage() {
                         <div className="bg-green-50/50 p-6 rounded-3xl border border-green-100 shadow-sm md:col-span-2">
                             <h3 className="font-bold text-green-800 mb-4 flex items-center gap-2">
                                 <Quote className="text-green-500" size={20} />
-                                Chef's Tips for Improvement
+                                Chef&apos;s Tips for Improvement
                             </h3>
                             <ul className="space-y-3">
                                 {improvementTips.map((tip, i) => (

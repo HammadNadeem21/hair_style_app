@@ -18,8 +18,7 @@ import { calculateCredits } from "@/../helper_function/calculate_credits";
 import { useSession } from "next-auth/react";
 import Hair_fields from "./Fields/Hair_fields";
 import Beared_fields from "./Fields/Beared_fields";
-import { RadioOption } from "./RadioGroup";
-import { ChartConfig } from "./ui/chart";
+
 
 
 const HAIR_COLORS = [
@@ -100,10 +99,10 @@ const Option = () => {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [beardLength, setBeardLength] = useState<"no moustache" | "light moustache" | "thick & dominant" | null>(null);
-  const [selectedOptions, setSelectedOptions] = useState<{ hair: boolean; beared: boolean }>({
-    hair: false,
-    beared: false
-  });
+  // const [selectedOptions, setSelectedOptions] = useState<{ hair: boolean; beared: boolean }>({
+  //   hair: false,
+  //   beared: false
+  // });
   const [beardCoverage, setBeardCoverage] = useState<Array<"full" | "Patchy cheeks" | "Weak moustache">>([]);
 
   // Toggle function for selecting options
@@ -117,7 +116,7 @@ const Option = () => {
 
 
   // Check if at least one option is selected
-  const hasSelectedOption = selectedOptions.hair || selectedOptions.beared;
+  // const hasSelectedOption = selectedOptions.hair || selectedOptions.beared;
 
 
   const router = useRouter()
@@ -166,12 +165,12 @@ const Option = () => {
   const handleUpload = async () => {
     if (!file) return alert("Please upload a selfie first!");
 
-    const isHairValid = selectedOptions.hair && (hairLength || hairStyle.length > 0);
-    const isBeardValid = selectedOptions.beared && (beardLength || beardCoverage.length > 0);
+    // const isHairValid = selectedOptions.hair && (hairLength || hairStyle.length > 0);
+    // const isBeardValid = selectedOptions.beared && (beardLength || beardCoverage.length > 0);
 
-    if (!isHairValid && !isBeardValid) {
-      return alert("Please select valid options for either Hair or Beard!");
-    }
+    // if (!isHairValid && !isBeardValid) {
+    //   return alert("Please select valid options for either Hair or Beard!");
+    // }
 
     setLoading(true);
 
@@ -198,8 +197,8 @@ const Option = () => {
 
     formData.append("beard_length", beardLength || "");
     formData.append("beard_coverage", beardCoverage.join(", "));
-    formData.append("is_hair_selected", String(selectedOptions.hair));
-    formData.append("is_beard_selected", String(selectedOptions.beared));
+    // formData.append("is_hair_selected", String(selectedOptions.hair));
+    // formData.append("is_beard_selected", String(selectedOptions.beared));
 
     try {
       // Check if user is logged in
@@ -638,7 +637,7 @@ const Option = () => {
               loading={loading}
             />
 
-            {selectedOptions.hair && (
+            {/* {selectedOptions.hair && (
               <Hair_fields
                 hairLength={hairLength}
                 setHairLength={setHairLength}
@@ -654,9 +653,9 @@ const Option = () => {
                 beardLength={beardLength}
                 setBeardLength={setBeardLength}
               />
-            )}
+            )} */}
 
-            {hasSelectedOption && (
+            {/* {hasSelectedOption && (
               <div className="flex flex-col items-start justify-center w-full gap-3 mt-2 animate-fadeIn">
                 <Heading_2 value="Select Hair Color:" className="font-bold text-sky-500 text-sm" />
                 <div className="flex flex-wrap items-center justify-center gap-3">
@@ -680,11 +679,11 @@ const Option = () => {
                   ))}
                 </div>
               </div>
-            )}
+            )} */}
 
           </div>
 
-          {hasSelectedOption && (
+          {/* {hasSelectedOption && (
             <MyButton
               value={loading ? "Generating..." : "Generate Hairstyle"}
               variant="default"
@@ -693,7 +692,7 @@ const Option = () => {
               loading={loading}
               className="w-full max-w-[280px] py-4 text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all self-center"
             />
-          )}
+          )} */}
 
         </div>
       )}

@@ -1,0 +1,741 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+import React, { useCallback, useRef, useState } from "react";
+import { MdOutlineFileUpload } from "react-icons/md";
+import { X } from "lucide-react";
+import { Heading_2 } from "./Text_Style/Heading_2";
+import { SmallText } from "./Text_Style/Small_text";
+import { IoCameraOutline } from "react-icons/io5";
+import { useDropzone } from "react-dropzone";
+import Image from "next/image";
+
+// import ColorPicker from "./ColorPicker";
+import { MyButton } from "./Button";
+import { useRouter } from "next/navigation";
+import { useImageContext } from "@/context/ImageContext";
+import { useCreditContext } from "@/context/CreditContext";
+import { calculateCredits } from "@/../helper_function/calculate_credits";
+import { useSession } from "next-auth/react";
+import Hair_fields from "./Fields/Hair_fields";
+import Beared_fields from "./Fields/Beared_fields";
+import NewForm from "./NewForm";
+import { RadioCardGroup, RadioOption } from "./RadioGroup";
+import { ChartBar } from "./Chart";
+import { ChartConfig } from "./ui/chart";
+import { text } from "stream/consumers";
+
+
+const HAIR_COLORS = [
+  { hex: "#090806", name: "Black" },
+  { hex: "#3B3024", name: "Dark Brown" },
+  { hex: "#4E433F", name: "Medium Brown" },
+  { hex: "#A7856A", name: "Light Brown" },
+  { hex: "#B7A69E", name: "Gray" },
+  { hex: "#D6C4C2", name: "Platinum" },
+  { hex: "#DEBC99", name: "Blonde" },
+  { hex: "#8D4A43", name: "Red/Auburn" },
+  { hex: "#FAEBD7", name: "White" },
+];
+
+// Helper function to compress image before upload
+// This is CRITICAL for mobile uploads to prevent 400 Bad Request errors
+const compressImage = (file: File, maxWidth = 1024, quality = 0.8): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // Calculate new dimensions while maintaining aspect ratio
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Failed to get canvas context'));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject(new Error('Failed to compress image'));
+              return;
+            }
+            const compressedFile = new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            });
+            console.log(`Compressed: ${(file.size / 1024).toFixed(2)}KB → ${(compressedFile.size / 1024).toFixed(2)}KB`);
+            resolve(compressedFile);
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+};
+
+const Option = () => {
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [hairLength, setHairLength] = useState<"long" | "short" | null>(null);
+  const [hairStyle, setHairStyle] = useState<Array<"asian" | "western">>([]);
+
+  const [color, setColor] = useState("#090806"); // Default to Black
+  // const [open, setOpen] = useState(false);
+  // const pickerRef = useRef<HTMLDivElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(false);
+  const [beardLength, setBeardLength] = useState<"no moustache" | "light moustache" | "thick & dominant" | null>(null);
+  const [selectedOptions, setSelectedOptions] = useState<{ hair: boolean; beared: boolean }>({
+    hair: false,
+    beared: false
+  });
+  const [beardCoverage, setBeardCoverage] = useState<Array<"full" | "Patchy cheeks" | "Weak moustache">>([]);
+
+  // Toggle function for selecting options
+  const toggleOption = (option: "hair" | "beared") => {
+    setSelectedOptions(prev => ({
+      ...prev,
+      [option]: !prev[option]
+    }));
+  };
+
+
+
+  // Check if at least one option is selected
+  const hasSelectedOption = selectedOptions.hair || selectedOptions.beared;
+
+
+  const router = useRouter()
+  const { setScanImage, setResultImages, setGlowResult, setFoodResult } = useImageContext();
+  const { setCredits } = useCreditContext();
+  const { data: session } = useSession();
+
+
+
+
+
+
+
+  // for image uploader
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const selected = acceptedFiles[0];
+    if (!selected) return;
+
+    if (!selected.type.startsWith("image/")) {
+      alert("Only image files are allowed");
+      return;
+    }
+
+    setFile(selected);
+    setPreview(URL.createObjectURL(selected)); // lightweight preview
+  }, []);
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    accept: { "image/*": [] },
+    multiple: false,
+  });
+
+
+  const handleCamera = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0];
+    if (!selected) return;
+
+    setFile(selected);
+    setPreview(URL.createObjectURL(selected)); // lightweight preview
+  };
+
+
+
+  const handleUpload = async () => {
+    if (!file) return alert("Please upload a selfie first!");
+
+    const isHairValid = selectedOptions.hair && (hairLength || hairStyle.length > 0);
+    const isBeardValid = selectedOptions.beared && (beardLength || beardCoverage.length > 0);
+
+    if (!isHairValid && !isBeardValid) {
+      return alert("Please select valid options for either Hair or Beard!");
+    }
+
+    setLoading(true);
+
+    // Save image to Context for Scan page
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        setScanImage(e.target.result as string);
+        router.push("/Scan");
+      }
+    };
+    reader.readAsDataURL(file);
+
+    // Create FormData to send the file safely
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("hair_length", hairLength || "");
+    formData.append("hair_style", hairStyle.join(", "));
+    formData.append("hair_color", color);
+
+    // Find color name
+    const selectedColorObj = HAIR_COLORS.find(c => c.hex === color);
+    formData.append("hair_color_name", selectedColorObj ? selectedColorObj.name : "Natural");
+
+    formData.append("beard_length", beardLength || "");
+    formData.append("beard_coverage", beardCoverage.join(", "));
+    formData.append("is_hair_selected", String(selectedOptions.hair));
+    formData.append("is_beard_selected", String(selectedOptions.beared));
+
+    try {
+      // Check if user is logged in
+      if (!session?.user?.email) {
+        alert("Please log in to generate hairstyles");
+        setLoading(false);
+        return;
+      }
+
+      // router.push("/Scan"); // Moved inside reader.onload
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      console.log("response", data.results);
+      console.log("totalTokens", data.totalTokens);
+
+      if (data.results && Array.isArray(data.results)) {
+        // Calculate credits used
+        let creditsUsed = 0;
+        if (data.totalTokens) {
+          creditsUsed = calculateCredits(data.totalTokens);
+          console.log("Credits to deduct:", creditsUsed);
+        }
+
+        // Deduct credits from database
+        if (creditsUsed > 0) {
+          const deductRes = await fetch("/api/credits/deduct", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: session.user.email,
+              creditsToDeduct: creditsUsed
+            })
+          });
+
+          const deductData = await deductRes.json();
+
+          if (!deductRes.ok) {
+            alert(deductData.error || "Failed to deduct credits");
+            setLoading(false);
+            // Redirect back to home if credit deduction fails
+            router.push("/");
+            return;
+          }
+
+          // Update credit context with remaining credits
+          setCredits(deductData.remainingCredits);
+          console.log("Remaining credits:", deductData.remainingCredits);
+        }
+
+        // Save results in Context
+        setResultImages(data.results);
+
+        // 3. Navigate to result page
+        router.push("/result");
+      } else {
+        console.error("API Error:", data);
+        alert(data.error || "Failed to generate images. Please try again.");
+        // Redirect back to home if generation fails
+        router.push("/");
+      }
+    } catch (e: any) {
+      console.error("Fetch Error:", e);
+      alert(`Error generating images: ${e.message}`);
+      // Redirect back to home if there's an exception
+      router.push("/");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  const handleGlowUp = async () => {
+    if (!file) {
+      return alert("Please upload a selfie first!");
+    }
+    setLoading(true);
+
+    try {
+      // Compress image before uploading (CRITICAL for mobile)
+      console.log(`Original file size: ${(file.size / 1024).toFixed(2)}KB`);
+      // Increased quality and resolution for better AI analysis
+      const compressedFile = await compressImage(file, 1920, 0.95);
+
+      // Save compressed image to Context for Result page
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setScanImage(e.target.result as string);
+        }
+      };
+      reader.readAsDataURL(compressedFile);
+
+      const formData = new FormData();
+      formData.append("image", compressedFile);
+
+      // if (!session?.user?.email) {
+      //   alert("Please login to generate images!");
+      //   setLoading(false);
+      //   return;
+      // }
+
+      const res = await fetch("/api/glow", {
+        method: "POST",
+        body: formData,
+      });
+
+      // Check if response is OK before parsing
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Glow API error response:", text);
+
+        // Handle rate limit specifically
+        if (res.status === 429) {
+          alert("⏱️ Too many requests! Please wait 30 seconds and try again.");
+          return;
+        }
+
+        // Handle bad request (usually image too large)
+        if (res.status === 400) {
+          alert("❌ Image processing failed. Try taking a new photo or using a smaller image.");
+          return;
+        }
+
+        try {
+          const errorData = JSON.parse(text);
+          alert(errorData.error || `Server error: ${res.status}`);
+        } catch {
+          alert(`Server error: ${res.status} ${res.statusText}`);
+        }
+        return;
+      }
+
+      // Verify content-type is JSON
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("Non-JSON response:", text);
+        alert("Server returned an invalid response. Please try again.");
+        return;
+      }
+
+      const data = await res.json();
+      console.log("AI Response", data);
+
+      if (data.success && data.result) {
+        setGlowResult(data.result);
+        router.push("/glow-result");
+      } else {
+        alert(data.error || "Failed to analyze image. Please try again.");
+      }
+
+    } catch (e: any) {
+      console.error("Fetch Error:", e);
+      alert(`Error generating images: ${e.message}`);
+      router.push("/");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFoodAnalysis = async () => {
+    if (!file) {
+      return alert("Please upload a food photo first!");
+    }
+    setLoading(true);
+
+    try {
+      console.log(`Original file size: ${(file.size / 1024).toFixed(2)}KB`);
+      const compressedFile = await compressImage(file, 1024, 0.8);
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setScanImage(e.target.result as string);
+        }
+      };
+      reader.readAsDataURL(compressedFile);
+
+      const formData = new FormData();
+      formData.append("image", compressedFile);
+
+      const res = await fetch("/api/food", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Food API error response:", text);
+
+        if (res.status === 429) {
+          alert("⏱️ Too many requests! Please wait 30 seconds and try again.");
+          return;
+        }
+
+        try {
+          const errorData = JSON.parse(text);
+          alert(errorData.error || `Server error: ${res.status}`);
+        } catch {
+          alert(`Server error: ${res.status} ${res.statusText}`);
+        }
+        return;
+      }
+
+      const data = await res.json();
+      console.log("Food AI Response", data);
+
+      if (data.success && data.result) {
+        setFoodResult(data.result);
+        router.push("/food-result");
+      } else {
+        alert(data.error || "Failed to analyze food. Please try again.");
+      }
+
+    } catch (e: any) {
+      console.error("Fetch Error:", e);
+      alert(`Error analyzing food: ${e.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  // const [foodName, setFoodName] = useState("");
+  // const handleFoodAnalysis = async () => {
+  //   if (!file) {
+  //     return alert("Please upload a food photo first!");
+  //   }
+  //   setLoading(true);
+
+  //   try {
+  //     console.log(`Original file size: ${(file.size / 1024).toFixed(2)}KB`);
+  //     const compressedFile = await compressImage(file, 1024, 0.8);
+
+  //     const reader = new FileReader();
+  //     reader.onload = (e) => {
+  //       if (e.target?.result) {
+  //         setScanImage(e.target.result as string);
+  //       }
+  //     };
+  //     reader.readAsDataURL(compressedFile);
+
+  //     const formData = new FormData();
+  //     formData.append("image", compressedFile);
+  //     formData.append("foodName", foodName);
+
+  //     const res = await fetch("/api/food", {
+  //       method: "POST",
+  //       body: formData,
+  //     });
+
+  //     if (!res.ok) {
+  //       const text = await res.text();
+  //       console.error("Food API error response:", text);
+
+  //       if (res.status === 429) {
+  //         alert("⏱️ Too many requests! Please wait 30 seconds and try again.");
+  //         return;
+  //       }
+
+  //       try {
+  //         const errorData = JSON.parse(text);
+  //         alert(errorData.error || `Server error: ${res.status}`);
+  //       } catch {
+  //         alert(`Server error: ${res.status} ${res.statusText}`);
+  //       }
+  //       return;
+  //     }
+
+  //     const data = await res.json();
+  //     console.log("Food AI Response", data);
+
+  //     if (data.success && data.result) {
+  //       setFoodResult(data.result);
+  //       router.push("/food-result");
+  //     } else {
+  //       alert(data.error || "Failed to analyze food. Please try again.");
+  //     }
+
+  //   } catch (e: any) {
+  //     console.error("Fetch Error:", e);
+  //     alert(`Error analyzing food: ${e.message}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
+
+  const [gender, setGender] = useState("");
+
+  const options: RadioOption[] = [
+    { value: "Male", label: "Male", id: "male" },
+    { value: "Female", label: "Female", id: "female" },
+    { value: "Other", label: "Other", id: "other" },
+  ];
+
+
+  const chartData = [
+    { month: "January", male: 186, female: 80, other: 80 },
+    { month: "February", male: 305, female: 200, other: 200 },
+    { month: "March", male: 237, female: 120, other: 120 },
+    { month: "April", male: 73, female: 190, other: 190 },
+    { month: "May", male: 209, female: 130, other: 130 },
+    { month: "June", male: 214, female: 140, other: 140 },
+    { month: "July", male: 224, female: 150, other: 150 },
+    { month: "August", male: 234, female: 160, other: 160 },
+    { month: "September", male: 244, female: 170, other: 170 },
+    { month: "October", male: 254, female: 180, other: 180 },
+    { month: "November", male: 264, female: 190, other: 190 },
+    { month: "December", male: 274, female: 200, other: 200 },
+  ];
+
+  const chartConfig = {
+    male: {
+      label: "Male",
+      color: "#2563eb",
+    },
+    female: {
+      label: "Female",
+      color: "#60a5fa",
+    },
+    other: {
+      label: "Other",
+      color: "#4ade80",
+    },
+  } satisfies ChartConfig;
+
+  return (
+    <div className="w-full">
+      {!preview ? (
+        <div className="flex flex-col  items-center justify-center w-full animate-fadeIn">
+          <div className="grid grid-cols-2 gap-4 w-full mt-2">
+            <div
+              className="flex flex-col items-center justify-center gap-3 bg-white/40 backdrop-blur-md border border-white/50 shadow-sm hover:shadow-lg rounded-2xl p-6 transition-all duration-300 cursor-pointer hover:-translate-y-1 group"
+              {...getRootProps()}
+            >
+              <input {...getInputProps()} className="hidden" />
+
+              <div className="flex items-center justify-center p-4 rounded-xl bg-primaryColor/10 text-primaryColor   transition-colors duration-300">
+                <MdOutlineFileUpload size={32} />
+              </div>
+              <div className="text-center">
+                <Heading_2 value="Upload Photo" className="font-semibold text-lg text-grayColor" />
+                <SmallText
+                  value="From Gallery"
+                  textColor="text-gray-500"
+                  className="text-center text-xs mt-1"
+                />
+              </div>
+            </div>
+
+            <div
+              className="flex flex-col items-center justify-center gap-3 bg-white/40 backdrop-blur-md border border-white/50 shadow-sm hover:shadow-lg rounded-2xl p-6 transition-all duration-300 cursor-pointer hover:-translate-y-1 group"
+              onClick={() => cameraInputRef.current?.click()}
+            >
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="user"
+                className="hidden"
+                onChange={handleCamera}
+              />
+              <div className="flex items-center justify-center p-4 rounded-xl bg-primaryColor/10 text-primaryColor  transition-colors duration-300">
+                <IoCameraOutline size={32} />
+              </div>
+              <div className="text-center">
+                <Heading_2 value="Take Selfie" className="font-semibold text-lg text-grayColor" />
+                <SmallText
+                  value="Camera"
+                  textColor="text-gray-500"
+                  className="text-center text-xs mt-1"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col items-stretch justify-start gap-6 w-full animate-fadeIn">
+
+          {/* Image Preview */}
+          <div className="relative w-full max-w-[280px] aspect-[3/4] rounded-2xl overflow-hidden shadow-lg border border-white/50 self-center">
+            <Image
+              src={preview as string}
+              alt="preview"
+              fill
+              className="object-cover"
+            />
+            <button
+              onClick={() => {
+                setPreview(null);
+                setFile(null);
+              }}
+              className="absolute top-3 right-3 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full backdrop-blur-sm transition-all duration-200 z-10"
+            >
+              <X size={16} />
+            </button>
+
+            {/* Overlay Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+          </div>
+
+          {/* Controls */}
+          <div className="flex flex-col items-stretch justify-center gap-4 w-full">
+
+            {/* <div className="flex items-center justify-center gap-4 w-full">
+
+              <button
+                onClick={() => toggleOption("hair")}
+                className={`text-sm font-medium py-2 px-6 rounded-lg transition-all duration-300 border-2 ${selectedOptions.hair
+                  ? 'bg-primaryColor text-white border-primaryColor shadow-md'
+                  : 'bg-white text-gray-500 border-gray-300'
+                  }`}
+              >
+                Haired
+              </button>
+              <button
+                onClick={() => toggleOption("beared")}
+                className={`text-sm font-medium py-2 px-6 rounded-lg transition-all duration-300 border-2 ${selectedOptions.beared
+                  ? 'bg-primaryColor text-white border-primaryColor shadow-md'
+                  : 'bg-white text-gray-500 border-gray-300'
+                  }`}
+              >
+                Bearded
+              </button>
+
+
+            </div> */}
+
+            {/* <NewForm /> */}
+            {/* <RadioCardGroup
+              value={gender}
+              onChange={setGender}
+              options={options}
+              className="max-w-xs self-center"
+            /> */}
+
+
+            {/* <ChartBar
+              data={chartData}
+              config={chartConfig}
+              xKey="month"
+              barKeys={["male", "female", "other"]}
+              tickFormatter={(value) => value.slice(0, 3)}
+            /> */}
+
+            {/* <MyButton value={"Glow Up Coaching With AI"}
+              className="w-full max-w-[280px] py-4 text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all self-center"
+              onClick={handleGlowUp}
+              variant="default"
+              disabled={!file || loading}
+              loading={loading}
+            /> */}
+
+            {/* <input type="text" className="w-full max-w-[280px] py-4 text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all self-center p-5" placeholder="Enter text" /> */}
+
+            <MyButton value={"Food Analysis"}
+              className="w-full max-w-[280px] py-4 text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all self-center bg-green-600 hover:bg-green-700 mt-2"
+              onClick={handleFoodAnalysis}
+              variant="default"
+              disabled={!file || loading}
+              loading={loading}
+            />
+
+            {selectedOptions.hair && (
+              <Hair_fields
+                hairLength={hairLength}
+                setHairLength={setHairLength}
+                hairStyle={hairStyle}
+                setHairStyle={setHairStyle}
+              />
+            )}
+
+            {selectedOptions.beared && (
+              <Beared_fields
+                beardCoverage={beardCoverage}
+                setBeardCoverage={setBeardCoverage}
+                beardLength={beardLength}
+                setBeardLength={setBeardLength}
+              />
+            )}
+
+            {hasSelectedOption && (
+              <div className="flex flex-col items-start justify-center w-full gap-3 mt-2 animate-fadeIn">
+                <Heading_2 value="Select Hair Color:" className="font-bold text-sky-500 text-sm" />
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  {HAIR_COLORS.map((c) => (
+                    <button
+                      key={c.hex}
+                      onClick={() => setColor(c.hex)}
+                      className={`w-10 h-10 rounded-full border-2 shadow-sm transition-all duration-300 transform hover:scale-110 ${color === c.hex
+                        ? "border-primaryColor ring-2 ring-primaryColor/30 scale-110"
+                        : "border-gray-200 hover:border-gray-400"
+                        }`}
+                      style={{ backgroundColor: c.hex }}
+                      title={c.name}
+                    >
+                      {color === c.hex && (
+                        <div className="w-full h-full flex items-center justify-center text-white/80 drop-shadow-md">
+                          ✓
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+          </div>
+
+          {hasSelectedOption && (
+            <MyButton
+              value={loading ? "Generating..." : "Generate Hairstyle"}
+              variant="default"
+              onClick={() => file && handleUpload()}
+              disabled={!file || loading}
+              loading={loading}
+              className="w-full max-w-[280px] py-4 text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all self-center"
+            />
+          )}
+
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+
+
+export default Option;
